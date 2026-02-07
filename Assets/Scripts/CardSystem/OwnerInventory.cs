@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
 using Mirror;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace FishONU.CardSystem
 {
@@ -120,7 +122,10 @@ namespace FishONU.CardSystem
                 var colorCmp = a.color.CompareTo(b.color);
                 if (colorCmp != 0) return colorCmp;
 
-                return a.face.CompareTo(b.face);
+                var faceCmp = a.face.CompareTo(b.face);
+                if (faceCmp != 0) return faceCmp;
+
+                return String.Compare(a.Guid, b.Guid, StringComparison.Ordinal);
             });
         }
 
