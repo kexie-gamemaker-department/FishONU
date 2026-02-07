@@ -6,54 +6,41 @@ using UnityEngine;
 namespace FishONU.CardSystem
 {
     [System.Serializable]
-    public class SecretInventory : NetworkBehaviour
+    public class SecretInventory : BaseInventory
     {
-        [SerializeField] private GameObject cardPrefab;
-
-
         [SerializeField] [SyncVar(hook = nameof(OnSyncCardChange))]
         private int syncCardNumber;
 
         [SerializeField] private int cardNumber;
 
-        public int CardNumber => cardNumber;
+        public override int CardNumber => cardNumber;
 
-        [Header("卡牌排版配置")] [SerializeField] public Vector3 cardSpawnPosition;
         public Vector3 cardSpaceOffset;
 
         public List<GameObject> cards = new();
 
-        private void Start()
-        {
-            if (cardPrefab == null) Debug.LogError("CardPrefab is null");
-            if (cardSpawnPosition == Vector3.zero)
-                cardSpawnPosition = gameObject.transform.position;
-        }
 
         [Client]
-        public void DebugAddCard()
+        public override void DebugAddCard(CardInfo cardInfo = null)
         {
-            // TODO:
             cardNumber++;
-            InstantiateAllCard();
-            ArrangeAllCard();
+            InstantiateAllCards();
+            ArrangeAllCards();
         }
 
         [Client]
-        public void DebugRemoveCard()
+        public override void DebugRemoveCard(CardInfo cardInfo = null)
         {
-            // TODO:
             if (cardNumber == 0) return;
 
             cardNumber--;
-            InstantiateAllCard();
-            ArrangeAllCard();
+            InstantiateAllCards();
+            ArrangeAllCards();
         }
 
-        [Client]
-        public void ArrangeAllCard()
+
+        public override void ArrangeAllCards()
         {
-            // TODO:
             for (int i = 0; i < cards.Count; i++)
             {
                 var t = cards[i].transform;
@@ -63,7 +50,7 @@ namespace FishONU.CardSystem
         }
 
         [Client]
-        public void InstantiateAllCard()
+        public override void InstantiateAllCards()
         {
             // figure out how many cards to instantiate
             var delta = cardNumber - cards.Count;
@@ -100,8 +87,8 @@ namespace FishONU.CardSystem
         {
             cardNumber = newValue;
 
-            InstantiateAllCard();
-            ArrangeAllCard();
+            InstantiateAllCards();
+            ArrangeAllCards();
         }
     }
 }

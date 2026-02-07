@@ -80,7 +80,7 @@ namespace FishONU.DebugTools
 
             if (GUILayout.Button("Arrange Card", GUILayout.Width(100)))
             {
-                GameObject.FindWithTag("Player").GetComponent<OwnerInventory>()?.ArrangeAllCard();
+                GameObject.FindWithTag("Player").GetComponent<OwnerInventory>()?.ArrangeAllCards();
             }
 
 
@@ -97,7 +97,7 @@ namespace FishONU.DebugTools
 
             if (GUILayout.Button("Arrange Secret Card", GUILayout.Width(100)))
             {
-                GameObject.FindWithTag("Player").GetComponent<SecretInventory>()?.ArrangeAllCard();
+                GameObject.FindWithTag("Player").GetComponent<SecretInventory>()?.ArrangeAllCards();
             }
 
             GUILayout.EndVertical();

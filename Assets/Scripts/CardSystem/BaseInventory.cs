@@ -1,22 +1,38 @@
-﻿using Mirror;
+﻿using System;
+using JetBrains.Annotations;
+using Mirror;
 using UnityEngine;
 
 namespace FishONU.CardSystem
 {
-    public class BaseInventory : NetworkBehaviour
+    public abstract class BaseInventory : NetworkBehaviour
     {
         // TODO: 抽象出 Base Inventory 类
-        [SerializeField] private GameObject cardPrefab;
-        [SerializeField] private Vector3 spawnCardPosition;
+        [SerializeField] protected GameObject cardPrefab;
+        [SerializeField] protected Vector3 cardSpawnPosition;
 
-        [Client]
-        public virtual void DebugAddCard()
+
+        public abstract int CardNumber { get; }
+
+        public virtual void DebugAddCard(CardInfo cardInfo = null)
         {
+            // used to debug.
         }
 
-        [Client]
-        public virtual void DebugRemvoeCard()
+        public virtual void DebugRemoveCard(CardInfo cardInfo = null)
         {
+            // used to debug.
         }
+
+        protected virtual void Start()
+        {
+            if (cardPrefab == null) Debug.LogError("CardPrefab is null");
+            if (cardSpawnPosition == Vector3.zero)
+                cardSpawnPosition = gameObject.transform.position;
+        }
+
+        public abstract void ArrangeAllCards();
+
+        public abstract void InstantiateAllCards();
     }
 }
