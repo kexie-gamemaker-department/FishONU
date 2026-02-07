@@ -1119,7 +1119,7 @@ MonoBehaviour:
   sendRate: 60
   unreliableBaselineRate: 1
   unreliableRedundancy: 0
-  transport: {fileID: 0}
+  transport: {fileID: 1703603623}
   networkAddress: localhost
   maxConnections: 100
   disconnectInactiveConnections: 0

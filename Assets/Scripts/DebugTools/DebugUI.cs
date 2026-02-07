@@ -83,6 +83,23 @@ namespace FishONU.DebugTools
                 GameObject.FindWithTag("Player").GetComponent<OwnerInventory>()?.ArrangeAllCard();
             }
 
+
+            if (GUILayout.Button("Add Secret Card", GUILayout.Width(100)))
+            {
+                // 寻找 inventory 然后 add card
+                GameObject.FindWithTag("Player").GetComponent<SecretInventory>()?.DebugAddCard();
+            }
+
+            if (GUILayout.Button("Remove Secret Card", GUILayout.Width(100)))
+            {
+                GameObject.FindWithTag("Player").GetComponent<SecretInventory>()?.DebugRemoveCard();
+            }
+
+            if (GUILayout.Button("Arrange Secret Card", GUILayout.Width(100)))
+            {
+                GameObject.FindWithTag("Player").GetComponent<SecretInventory>()?.ArrangeAllCard();
+            }
+
             GUILayout.EndVertical();
         }
     }
