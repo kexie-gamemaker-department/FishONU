@@ -29,7 +29,7 @@ namespace FishONU.CardSystem
 
     public class CardObj : MonoBehaviour
     {
-        public bool isHover { get; private set; }
+        public bool IsHover { get; private set; }
         public bool isDrag = false;
 
         private CardInfo data = new();
@@ -94,12 +94,12 @@ namespace FishONU.CardSystem
 
         private void OnMouseEnter()
         {
-            isHover = true;
+            IsHover = true;
         }
 
         private void OnMouseExit()
         {
-            isHover = false;
+            IsHover = false;
         }
 
         private void OnMouseDown()

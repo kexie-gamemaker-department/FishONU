@@ -1,18 +1,19 @@
-﻿using System;
-using JetBrains.Annotations;
+﻿using FishONU.CardSystem.CardArrangeStrategy;
 using Mirror;
 using UnityEngine;
 
 namespace FishONU.CardSystem
 {
+    [System.Serializable]
     public abstract class BaseInventory : NetworkBehaviour
     {
         // TODO: 抽象出 Base Inventory 类
         [SerializeField] protected GameObject cardPrefab;
         [SerializeField] protected Vector3 cardSpawnPosition;
 
-
         public abstract int CardNumber { get; }
+
+        protected IArrangeStrategy ArrangeStrategy;
 
         public virtual void DebugAddCard(CardInfo cardInfo = null)
         {
@@ -30,6 +31,7 @@ namespace FishONU.CardSystem
             if (cardSpawnPosition == Vector3.zero)
                 cardSpawnPosition = gameObject.transform.position;
         }
+
 
         public abstract void ArrangeAllCards();
 

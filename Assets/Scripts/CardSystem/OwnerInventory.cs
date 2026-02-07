@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using DG.Tweening;
+using FishONU.CardSystem.CardArrangeStrategy;
 using Mirror;
 using UnityEngine;
 using Random = UnityEngine.Random;
@@ -18,20 +19,19 @@ namespace FishONU.CardSystem
 
         public override int CardNumber => cards.Count;
 
-        public enum ArrangeType
-        {
-            HorizontalCenter, // 横向均匀居中（手牌专用，推荐）
-            StackOffset, // 叠放偏移（弃牌堆专用，顶牌在正位，下面的牌偏移）
-            StackOverlap // 完全堆叠（牌库专用，所有牌叠在一起）
-        }
 
-        [Header("卡牌排版配置")] public ArrangeType cardArrangeType;
-        public float cardWidth = 1.3f;
+        [Header("卡牌排版配置")] public float cardWidth = 1.3f;
         public float cardHeight = 1.9f;
-        public Vector2 stackOffset = new Vector2(0.15f, -0.15f); // 叠放偏移
-        public float smoothMoveTime = 0.2f; // 卡牌平滑移动时间（0则瞬移）
-        public Vector3 cardSpawnPos;
 
+        private void Awake()
+        {
+            // card width and height is 1.3f * 1.9f enough.
+            ArrangeStrategy = new LinearArrange
+            {
+                StartPosition = cardSpawnPosition,
+                PositionOffset = new Vector3(1.3f, 0f, 0f)
+            };
+        }
 
         public override void OnStartClient()
         {
@@ -107,9 +107,9 @@ namespace FishONU.CardSystem
                 if (cardObjs.TryGetValue(guid, out var obj))
                 {
                     var t = obj.transform;
-                    var targetPos = new Vector3(i * cardWidth, 0, 0);
+                    ArrangeStrategy.Calc(i, cards.Count, out var pos, out var _, out var _);
                     t.DOKill();
-                    t.transform.DOMove(targetPos, 0.5f).SetEase(Ease.InOutQuad);
+                    t.transform.DOMove(pos, 0.5f).SetEase(Ease.InOutQuad);
                 }
             }
         }
@@ -138,7 +138,7 @@ namespace FishONU.CardSystem
                 if (cardObjs.ContainsKey(card.Guid)) continue;
 
                 var cardObj = Instantiate(cardPrefab, gameObject.transform);
-                cardObj.transform.position = cardSpawnPos;
+                cardObj.transform.position = cardSpawnPosition;
                 cardObj.GetComponent<CardObj>().Load(card);
                 cardObjs.Add(card.Guid, cardObj);
             }

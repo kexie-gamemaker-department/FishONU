@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using DG.Tweening;
+using FishONU.CardSystem.CardArrangeStrategy;
 using Mirror;
 using UnityEngine;
 
@@ -18,6 +20,15 @@ namespace FishONU.CardSystem
         public Vector3 cardSpaceOffset;
 
         public List<GameObject> cards = new();
+
+        private void Awake()
+        {
+            ArrangeStrategy = new LinearArrange
+            {
+                PositionOffset = new Vector3(0.1f, 0.13f, 0f),
+                StartPosition = cardSpawnPosition
+            };
+        }
 
 
         [Client]
