@@ -100,6 +100,12 @@ namespace FishONU.DebugTools
                 GameObject.FindWithTag("Player").GetComponent<SecretInventory>()?.ArrangeAllCards();
             }
 
+            if (GUILayout.Button("Add Discard Card", GUILayout.Width(100)))
+            {
+                // 寻找 inventory 然后 add card
+                GameObject.FindWithTag("Player").GetComponent<DiscardInventory>()?.AddCard(new CardInfo());
+            }
+
             GUILayout.EndVertical();
         }
     }
