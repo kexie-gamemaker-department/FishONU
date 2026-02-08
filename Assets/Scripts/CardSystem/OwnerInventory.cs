@@ -15,7 +15,7 @@ namespace FishONU.CardSystem
         private Dictionary<string, GameObject> cardObjs = new();
 
         public readonly List<CardInfo> cards = new();
-        private readonly SyncList<CardInfo> _syncCards = new();
+        public readonly SyncList<CardInfo> syncCards = new();
 
         public override int CardNumber => cards.Count;
 
@@ -29,19 +29,36 @@ namespace FishONU.CardSystem
             };
         }
 
+
         public override void OnStartClient()
         {
-            _syncCards.Callback += OnSyncCardChange;
+            syncCards.Callback += OnSyncCardChange;
         }
 
         public override void OnStopClient()
         {
-            _syncCards.Callback -= OnSyncCardChange;
+            syncCards.Callback -= OnSyncCardChange;
+        }
+
+        [Server]
+        public override void DebugAddCard(CardInfo cardInfo = null)
+        {
+            cardInfo ??= new CardInfo(Color.Blue, Face.DrawTwo);
+
+            syncCards.Add(cardInfo);
+        }
+
+        [Server]
+        public void DebugRemoveCard()
+        {
+            if (cards.Count == 0) return;
+
+            syncCards.RemoveAt(Random.Range(0, cards.Count));
         }
 
 
         [Client]
-        public override void DebugAddCard(CardInfo cardInfo = null)
+        public void ClientAddCard(CardInfo cardInfo = null)
         {
             cardInfo ??= new CardInfo();
 
@@ -52,7 +69,7 @@ namespace FishONU.CardSystem
         }
 
         [Client]
-        public override void DebugRemoveCard(CardInfo cardInfo = null)
+        public void ClientRemoveCard(CardInfo cardInfo = null)
         {
             if (cards.Count == 0) return;
 
@@ -75,12 +92,13 @@ namespace FishONU.CardSystem
         private void OnSyncCardChange(SyncList<CardInfo>.Operation op, int index, CardInfo oldItem, CardInfo newItem)
         {
             cards.Clear();
-            cards.AddRange(_syncCards);
+            cards.AddRange(syncCards);
 
             // TODO: 实现增量更新
             InstantiateAllCards();
             ArrangeAllCards();
         }
+
 
         [Server]
         public void PlayCard(CardInfo card)
@@ -105,7 +123,7 @@ namespace FishONU.CardSystem
                     var t = obj.transform;
                     ArrangeStrategy.Calc(i, cards.Count, out var pos, out var _, out var _);
                     t.DOKill();
-                    t.transform.DOMove(pos, 0.5f).SetEase(Ease.InOutQuad);
+                    t.transform.DOLocalMove(pos, 0.5f).SetEase(Ease.InOutQuad);
                 }
             }
         }
@@ -134,7 +152,7 @@ namespace FishONU.CardSystem
                 if (cardObjs.ContainsKey(card.Guid)) continue;
 
                 var cardObj = Instantiate(cardPrefab, gameObject.transform);
-                cardObj.transform.position = cardSpawnPosition;
+                cardObj.transform.localPosition = cardSpawnPosition;
                 cardObj.GetComponent<CardObj>().Load(card);
                 cardObjs.Add(card.Guid, cardObj);
             }

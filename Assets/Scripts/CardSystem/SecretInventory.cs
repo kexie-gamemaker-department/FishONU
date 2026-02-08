@@ -7,11 +7,14 @@ using UnityEngine;
 
 namespace FishONU.CardSystem
 {
-    [System.Serializable]
+    [RequireComponent(typeof(OwnerInventory))]
+    [Serializable]
     public class SecretInventory : BaseInventory
     {
         [SerializeField] [SyncVar(hook = nameof(OnSyncCardChange))]
         private int syncCardNumber;
+
+        private OwnerInventory ownerInventory;
 
         [SerializeField] private int cardNumber;
         public override int CardNumber => cardNumber;
@@ -28,6 +31,43 @@ namespace FishONU.CardSystem
                 PositionOffset = new Vector3(0.1f, 0.13f, 0f),
                 StartPosition = cardSpawnPosition
             };
+        }
+
+        protected override void Start()
+        {
+            base.Start();
+            ownerInventory = GetComponent<OwnerInventory>();
+            if (ownerInventory == null) Debug.LogError("OwnerInventory not found");
+        }
+
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+
+            // 中途加入 / 重连
+            OnSyncCardChange(0, syncCardNumber);
+        }
+
+        public override void OnStartServer()
+        {
+            if (ownerInventory == null) ownerInventory = GetComponent<OwnerInventory>();
+            if (ownerInventory == null) Debug.LogError("OwnerInventory not found");
+
+            ownerInventory.syncCards.Callback += OnOwnerSyncCardNumberChange;
+
+            syncCardNumber = ownerInventory.syncCards.Count;
+        }
+
+        public override void OnStopServer()
+        {
+            ownerInventory.syncCards.Callback -= OnOwnerSyncCardNumberChange;
+        }
+
+        [Server]
+        private void OnOwnerSyncCardNumberChange(SyncList<CardInfo>.Operation operation, int i, CardInfo card1,
+            CardInfo card2)
+        {
+            syncCardNumber = ownerInventory.syncCards.Count;
         }
 
 
@@ -56,7 +96,7 @@ namespace FishONU.CardSystem
             {
                 var t = cards[i].transform;
                 t.DOKill();
-                t.DOMove(cardSpawnPosition + cardSpaceOffset * i, 0.5f).SetEase(Ease.InOutQuad);
+                t.DOLocalMove(cardSpawnPosition + cardSpaceOffset * i, 0.5f).SetEase(Ease.InOutQuad);
             }
         }
 
@@ -94,8 +134,12 @@ namespace FishONU.CardSystem
             }
         }
 
+        [Client]
         private void OnSyncCardChange(int oldValue, int newValue)
         {
+            // 如果是自身则不进行显示视觉
+            if (isLocalPlayer) return;
+
             cardNumber = newValue;
 
             InstantiateAllCards();

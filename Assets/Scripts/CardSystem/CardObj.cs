@@ -1,14 +1,9 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
-using IO.Swagger.Model;
-using Mirror;
 using Telepathy;
-using TMPro;
 using UnityEngine;
 using UColor = UnityEngine.Color;
-using UnityEngine.Serialization;
 
 namespace FishONU.CardSystem
 {

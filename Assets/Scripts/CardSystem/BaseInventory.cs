@@ -13,7 +13,7 @@ namespace FishONU.CardSystem
 
         public abstract int CardNumber { get; }
 
-        protected IArrangeStrategy ArrangeStrategy;
+        public IArrangeStrategy ArrangeStrategy;
 
         public virtual void DebugAddCard(CardInfo cardInfo = null)
         {

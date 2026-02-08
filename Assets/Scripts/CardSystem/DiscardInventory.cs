@@ -30,7 +30,7 @@ namespace FishONU.CardSystem
         private void OnCardListAdd(int index)
         {
             var card = syncCards[index];
-            if (card != null) AddCard(card);
+            if (card != null) DebugAddCard(card);
         }
 
         [Client]
@@ -39,8 +39,15 @@ namespace FishONU.CardSystem
             ClearAllCard();
         }
 
+        [Server]
+        public void AddCard(CardInfo cardInfo = null)
+        {
+            cardInfo ??= new CardInfo(Color.Green, Face.DrawTwo);
+            syncCards.Add(cardInfo);
+        }
+
         [Client]
-        public void AddCard(CardInfo cardInfo)
+        public override void DebugAddCard(CardInfo cardInfo = null)
         {
             var obj = Instantiate(cardPrefab, gameObject.transform);
             cardObjs.Add(obj);
@@ -56,17 +63,17 @@ namespace FishONU.CardSystem
 
             var t = obj.transform;
 
-            t.position = cardSpawnPosition;
+            t.localPosition = cardSpawnPosition;
 
             obj.GetComponent<CardObj>().Load(cardInfo);
 
             // TODO: animation / arrange
 
-            t.DOMove(new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), 0f), 0.5f)
+            t.DOLocalMove(new Vector3(Random.Range(-1f, 1f), Random.Range(-1f, 1f), 0f), 0.5f)
                 .SetEase(Ease.OutQuad);
 
             // 随机旋转摆放
-            t.DORotate(new Vector3(0f, 0f, Random.Range(-30f, 30f)), 0.5f, RotateMode.FastBeyond360)
+            t.DOLocalRotate(new Vector3(0f, 0f, Random.Range(-30f, 30f)), 0.5f, RotateMode.FastBeyond360)
                 .SetEase(Ease.OutQuad);
         }
 
