@@ -14,10 +14,10 @@ namespace FishONU.CardSystem
         private int syncCardNumber;
 
         [SerializeField] private int cardNumber;
-
         public override int CardNumber => cardNumber;
 
-        public Vector3 cardSpaceOffset;
+        [Header("牌组摆放")] public Vector3 cardRotationOffset = new(0.1f, 0.13f, 0f);
+        public Vector3 cardSpaceOffset = new(0f, 0f, 0f);
 
         public List<GameObject> cards = new();
 

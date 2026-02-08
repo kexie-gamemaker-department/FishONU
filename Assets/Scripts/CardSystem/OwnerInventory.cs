@@ -19,10 +19,6 @@ namespace FishONU.CardSystem
 
         public override int CardNumber => cards.Count;
 
-
-        [Header("卡牌排版配置")] public float cardWidth = 1.3f;
-        public float cardHeight = 1.9f;
-
         private void Awake()
         {
             // card width and height is 1.3f * 1.9f enough.
