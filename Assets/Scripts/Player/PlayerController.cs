@@ -110,18 +110,6 @@ namespace FishONU.Player
             }
         }
 
-        [Command]
-        public void CmdSitDown()
-        {
-            SitDown();
-        }
-
-
-        [Command]
-        public void CmdStandUp()
-        {
-            StandUp();
-        }
 
         [Client]
         public void OnSeatIndexChange(int oldValue, int newValue)
