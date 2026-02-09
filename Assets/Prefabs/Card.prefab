@@ -98,14 +98,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5b825abf96cbeae4194fd1b1da713407, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isHover: 1
   isDrag: 0
   spriteRenderer: {fileID: 817575177934693086}
-  coliider: {fileID: 2079949875547580292}
   red: {r: 255, g: 0, b: 0, a: 1}
   blue: {r: 0, g: 0, b: 255, a: 1}
   green: {r: 0, g: 255, b: 0, a: 1}
-  yellow: {r: 255, g: 255, b: 0, a: 1}
+  yellow: {r: 0.9137255, g: 0.9137255, b: 0, a: 1}
   black: {r: 0, g: 0, b: 0, a: 1}
   faceSprites:
   - face: 0
@@ -128,6 +126,18 @@ MonoBehaviour:
     sprite: {fileID: 21300000, guid: 4cdc7f38939a7db4fa84c3c34aa46603, type: 3}
   - face: 9
     sprite: {fileID: 21300000, guid: e4494d5dbe2c51946a5528012670c8fb, type: 3}
+  - face: 10
+    sprite: {fileID: 21300000, guid: 126367ca8c69a90408692c91752670d1, type: 3}
+  - face: 11
+    sprite: {fileID: 21300000, guid: 5a558e124df1da94982a414c288ef76c, type: 3}
+  - face: 12
+    sprite: {fileID: 21300000, guid: 9d676ba4ab86c954bae42ac2bdbe4287, type: 3}
+  - face: 13
+    sprite: {fileID: 21300000, guid: bfe47cd43575a9f4196f969eb514102e, type: 3}
+  - face: 14
+    sprite: {fileID: 21300000, guid: 441b17b832c83044bbc2a21022287ba9, type: 3}
+  - face: 15
+    sprite: {fileID: 21300000, guid: 67d1d94d7caf44b45879c3d4bac1c0ce, type: 3}
   colorMaterials:
   - color: 0
     material: {fileID: 2100000, guid: 63536fab27183454a9166034642e1bbd, type: 2}
@@ -136,7 +146,7 @@ MonoBehaviour:
   - color: 2
     material: {fileID: 2100000, guid: adc8a967c40a3ec42902a3139faf30df, type: 2}
   - color: 3
-    material: {fileID: 2100000, guid: e7ead3db0b56746e9a3deb1bd6ef47c6, type: 2}
+    material: {fileID: 2100000, guid: 40d239bcf28efc04e8d38dcaa5c25a9d, type: 2}
   - color: 4
     material: {fileID: 2100000, guid: a723ac0940dee164da417afbc37615da, type: 2}
 --- !u!61 &2079949875547580292

@@ -1,11 +1,14 @@
 ﻿using System;
 using FishONU.CardSystem;
+using FishONU.GamePlay.GameState;
+using Mirror;
 using UnityEngine;
+using UnityEngine.InputSystem;
 using UnityEngine.Serialization;
 
 namespace FishONU.DebugTools
 {
-    public class DebugUI : MonoBehaviour
+    public class DebugUI : NetworkBehaviour
     {
         public MenuTab display = MenuTab.None;
 
@@ -16,8 +19,8 @@ namespace FishONU.DebugTools
             Card
         }
 
-        public string address { get; private set; }
-        public string port { get; private set; }
+        public string address;
+        public string port;
 
         public void Awake()
         {
@@ -25,8 +28,18 @@ namespace FishONU.DebugTools
             port = "7777";
         }
 
+        private void Update()
+        {
+            if (!isLocalPlayer) return;
+            if (Keyboard.current.f5Key.wasPressedThisFrame)
+            {
+                display = display == MenuTab.None ? MenuTab.Card : MenuTab.None;
+            }
+        }
+
         private void OnGUI()
         {
+            if (!isLocalPlayer) return;
             if (display == MenuTab.None) return;
 
             GUI.Box(new Rect(20, 20, 400, 400), "Debug Menu");
@@ -35,7 +48,7 @@ namespace FishONU.DebugTools
             switch (display)
             {
                 case MenuTab.Network:
-                    DrawNetworkMenu();
+                    DrawGameStateMenu();
                     break;
                 case MenuTab.Card:
                     DrawCardMenu();
@@ -45,22 +58,11 @@ namespace FishONU.DebugTools
             GUILayout.EndArea();
         }
 
-        private void DrawNetworkMenu()
+        private void DrawGameStateMenu()
         {
             GUILayout.BeginVertical("box");
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Address: ");
-            address = GUILayout.TextField(address);
-            GUILayout.EndHorizontal();
-            GUILayout.BeginHorizontal();
-            GUILayout.Label("Port: ");
-            port = GUILayout.TextField(port);
-            GUILayout.EndHorizontal();
-            if (GUILayout.Button("Connect", GUILayout.Width(100)))
-            {
-                Debug.Log($"Try to connect {address}:{port}");
-            }
-
+            if (GUILayout.Button("Start Game", GUILayout.Width(100)))
+                GameObject.FindWithTag("GameStateManager")?.GetComponent<GameStateManager>()?.StartGame();
             GUILayout.EndVertical();
         }
 
@@ -70,17 +72,17 @@ namespace FishONU.DebugTools
             if (GUILayout.Button("Add Card", GUILayout.Width(100)))
             {
                 // 寻找 inventory 然后 add card
-                GameObject.FindWithTag("Player").GetComponent<OwnerInventory>()?.DebugAddCard(new CardInfo());
+                GetComponent<OwnerInventory>()?.DebugCmdAddCard();
             }
 
             if (GUILayout.Button("Remove Card", GUILayout.Width(100)))
             {
-                GameObject.FindWithTag("Player").GetComponent<OwnerInventory>()?.DebugRemoveCard();
+                GetComponent<OwnerInventory>()?.DebugCmdRemoveCard();
             }
 
             if (GUILayout.Button("Arrange Card", GUILayout.Width(100)))
             {
-                GameObject.FindWithTag("Player").GetComponent<OwnerInventory>()?.ArrangeAllCards();
+                GetComponent<OwnerInventory>()?.ArrangeAllCards();
             }
 
 
@@ -98,6 +100,12 @@ namespace FishONU.DebugTools
             if (GUILayout.Button("Arrange Secret Card", GUILayout.Width(100)))
             {
                 GameObject.FindWithTag("Player").GetComponent<SecretInventory>()?.ArrangeAllCards();
+            }
+
+            if (GUILayout.Button("Add Discard Card", GUILayout.Width(100)))
+            {
+                // 寻找 inventory 然后 add card
+                GameObject.FindWithTag("Player").GetComponent<DiscardInventory>()?.AddCard();
             }
 
             GUILayout.EndVertical();

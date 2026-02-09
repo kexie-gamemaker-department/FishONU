@@ -15,37 +15,79 @@ namespace FishONU.CardSystem
         private Dictionary<string, GameObject> cardObjs = new();
 
         public readonly List<CardInfo> cards = new();
-        private readonly SyncList<CardInfo> _syncCards = new();
+        public readonly SyncList<CardInfo> syncCards = new();
 
         public override int CardNumber => cards.Count;
-
-
-        [Header("卡牌排版配置")] public float cardWidth = 1.3f;
-        public float cardHeight = 1.9f;
 
         private void Awake()
         {
             // card width and height is 1.3f * 1.9f enough.
-            ArrangeStrategy = new LinearArrange
+            // ArrangeStrategy = new LinearArrange
+            // {
+            //     StartPosition = cardSpawnPosition,
+            //     PositionOffset = new Vector3(1.3f, 0f, 0f)
+            // };
+            ArrangeStrategy = new CenterLinearWithArc
             {
-                StartPosition = cardSpawnPosition,
-                PositionOffset = new Vector3(1.3f, 0f, 0f)
+                CenterPosition = cardSpawnPosition,
+                PositionOffset = new(0.65f, 0.1f, 0f),
+                RotationOffset = new(0f, 0f, -5f)
             };
         }
 
+
         public override void OnStartClient()
         {
-            _syncCards.Callback += OnSyncCardChange;
+            // 如果是 host 模式，防止显示其他人的手牌
+            if (!isLocalPlayer) return;
+
+            syncCards.Callback += OnSyncCardChange;
         }
 
         public override void OnStopClient()
         {
-            _syncCards.Callback -= OnSyncCardChange;
+            // 如果是 host 模式，防止显示其他人的手牌
+            if (!isLocalPlayer) return;
+
+            syncCards.Callback -= OnSyncCardChange;
+        }
+
+        [Command]
+        public void DebugCmdAddCard()
+        {
+            var cardInfo = new CardInfo((Color)Random.RandomRange(0, 4), (Face)Random.RandomRange(0, 15));
+
+            syncCards.Add(cardInfo);
+        }
+
+        [Command]
+        public void DebugCmdRemoveCard()
+        {
+            if (syncCards.Count == 0) return;
+
+            syncCards.RemoveAt(Random.Range(0, syncCards.Count));
+        }
+
+        [Server]
+        public override void DebugAddCard(CardInfo cardInfo = null)
+        {
+            // TODO: 已知 bug 1: host 模式下加牌会导致 host client 能看到给其他 remote client 加的牌
+            cardInfo ??= new CardInfo(Color.Blue, Face.DrawTwo);
+
+            syncCards.Add(cardInfo);
+        }
+
+        [Server]
+        public void DebugRemoveCard()
+        {
+            if (cards.Count == 0) return;
+
+            syncCards.RemoveAt(Random.Range(0, cards.Count));
         }
 
 
         [Client]
-        public override void DebugAddCard(CardInfo cardInfo = null)
+        public void ClientAddCard(CardInfo cardInfo = null)
         {
             cardInfo ??= new CardInfo();
 
@@ -56,7 +98,7 @@ namespace FishONU.CardSystem
         }
 
         [Client]
-        public override void DebugRemoveCard(CardInfo cardInfo = null)
+        public void ClientRemoveCard(CardInfo cardInfo = null)
         {
             if (cards.Count == 0) return;
 
@@ -79,12 +121,13 @@ namespace FishONU.CardSystem
         private void OnSyncCardChange(SyncList<CardInfo>.Operation op, int index, CardInfo oldItem, CardInfo newItem)
         {
             cards.Clear();
-            cards.AddRange(_syncCards);
+            cards.AddRange(syncCards);
 
             // TODO: 实现增量更新
             InstantiateAllCards();
             ArrangeAllCards();
         }
+
 
         [Server]
         public void PlayCard(CardInfo card)
@@ -107,9 +150,11 @@ namespace FishONU.CardSystem
                 if (cardObjs.TryGetValue(guid, out var obj))
                 {
                     var t = obj.transform;
-                    ArrangeStrategy.Calc(i, cards.Count, out var pos, out var _, out var _);
+                    ArrangeStrategy.Calc(i, cards.Count, out var pos, out var rotation, out var scale);
                     t.DOKill();
-                    t.transform.DOMove(pos, 0.5f).SetEase(Ease.InOutQuad);
+                    t.transform.DOLocalMove(pos, 0.5f).SetEase(Ease.InOutQuad);
+                    t.transform.DOLocalRotate(rotation, 0.5f).SetEase(Ease.InOutQuad);
+                    t.transform.DOScale(scale, 0.5f).SetEase(Ease.InOutQuad);
                 }
             }
         }
@@ -138,7 +183,7 @@ namespace FishONU.CardSystem
                 if (cardObjs.ContainsKey(card.Guid)) continue;
 
                 var cardObj = Instantiate(cardPrefab, gameObject.transform);
-                cardObj.transform.position = cardSpawnPosition;
+                cardObj.transform.localPosition = cardSpawnPosition;
                 cardObj.GetComponent<CardObj>().Load(card);
                 cardObjs.Add(card.Guid, cardObj);
             }

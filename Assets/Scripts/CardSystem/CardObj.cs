@@ -1,14 +1,9 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using DG.Tweening;
-using IO.Swagger.Model;
-using Mirror;
 using Telepathy;
-using TMPro;
 using UnityEngine;
 using UColor = UnityEngine.Color;
-using UnityEngine.Serialization;
 
 namespace FishONU.CardSystem
 {
@@ -32,7 +27,7 @@ namespace FishONU.CardSystem
         public bool IsHover { get; private set; }
         public bool isDrag = false;
 
-        private CardInfo data = new();
+        private CardInfo data;
 
         public Action<CardObj> OnCardClick;
 
@@ -63,6 +58,11 @@ namespace FishONU.CardSystem
 
         public void Load(CardInfo cardInfo)
         {
+            if (cardInfo == null)
+            {
+                Debug.LogError("CardObj.Load: cardInfo is null");
+            }
+
             data = cardInfo;
 
             // 显示对应贴图

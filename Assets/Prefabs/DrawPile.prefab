@@ -1,6 +1,6 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!1 &6744762889351687486
+--- !u!1 &5843377741051605919
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -8,26 +8,24 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 4467734482600933171}
-  - component: {fileID: 2957663914324027070}
-  - component: {fileID: 989305339709376119}
-  - component: {fileID: 2083833337262872718}
-  - component: {fileID: -1040178787059280909}
-  - component: {fileID: 2302345486958595659}
+  - component: {fileID: 9031493973210987322}
+  - component: {fileID: 3894230846914369807}
+  - component: {fileID: 4197510971496229801}
+  - component: {fileID: 939130537820761834}
   m_Layer: 0
-  m_Name: Player
-  m_TagString: Player
+  m_Name: DrawPile
+  m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!4 &4467734482600933171
+--- !u!4 &9031493973210987322
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6744762889351687486}
+  m_GameObject: {fileID: 5843377741051605919}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -36,31 +34,31 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &2957663914324027070
+--- !u!114 &3894230846914369807
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6744762889351687486}
+  m_GameObject: {fileID: 5843377741051605919}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9b91ecbcc199f4492b9a91e820070131, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   sceneId: 0
-  _assetId: 2821762647
+  _assetId: 2837132232
   serverOnly: 0
   visibility: 0
   hasSpawned: 0
---- !u!114 &989305339709376119
+--- !u!114 &4197510971496229801
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6744762889351687486}
-  m_Enabled: 0
+  m_GameObject: {fileID: 5843377741051605919}
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0439c105859e4e02bf761acca18c2953, type: 3}
   m_Name: 
@@ -71,14 +69,14 @@ MonoBehaviour:
   syncInterval: 0
   cardPrefab: {fileID: 4402927463473126000, guid: d1da129b82bdc454f8be46202cbb0827, type: 3}
   cardSpawnPosition: {x: 0, y: 0, z: 0}
---- !u!114 &2083833337262872718
+--- !u!114 &939130537820761834
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6744762889351687486}
-  m_Enabled: 0
+  m_GameObject: {fileID: 5843377741051605919}
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6174b802d69643899295b5b39e7cb141, type: 3}
   m_Name: 
@@ -91,42 +89,6 @@ MonoBehaviour:
   cardSpawnPosition: {x: 0, y: 0, z: 0}
   syncCardNumber: 0
   cardNumber: 0
+  cardRotationOffset: {x: 0, y: 0, z: 0}
+  cardSpaceOffset: {x: 0, y: 0.05, z: 0}
   cards: []
---- !u!114 &-1040178787059280909
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6744762889351687486}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c20574d76bf04a6b91be56d3d1de6b4d, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  syncMethod: 0
-  syncDirection: 0
-  syncMode: 0
-  syncInterval: 0
-  ownerInventory: {fileID: 0}
-  secretInventory: {fileID: 0}
-  seatIndex: -1
---- !u!114 &2302345486958595659
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6744762889351687486}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 34fd6e72e35e4e5eb72b5a58549f405b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  syncMethod: 0
-  syncDirection: 0
-  syncMode: 0
-  syncInterval: 0
-  display: 0
-  address: 
-  port: 
