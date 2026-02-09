@@ -5,7 +5,7 @@ namespace FishONU.GamePlay.GameState
 {
     public abstract class GameState
     {
-        protected GameStateManager Manager { get; set; }
+        public GameStateManager Manager { get; set; }
 
         public virtual void Initialize(GameStateManager manager)
         {

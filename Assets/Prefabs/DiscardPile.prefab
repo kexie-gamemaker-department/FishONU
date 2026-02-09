@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 804530507266689762}
   m_Layer: 0
   m_Name: DiscardPile
-  m_TagString: Untagged
+  m_TagString: DiscardPile
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -66,6 +66,6 @@ MonoBehaviour:
   syncDirection: 0
   syncMode: 0
   syncInterval: 0
-  cardPrefab: {fileID: 2261549397530524041}
+  cardPrefab: {fileID: 4402927463473126000, guid: d1da129b82bdc454f8be46202cbb0827, type: 3}
   cardSpawnPosition: {x: 0, y: 0, z: 0}
   maxCardNumbers: 50

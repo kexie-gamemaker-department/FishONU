@@ -12,7 +12,7 @@ namespace FishONU.CardSystem
     public class SecretInventory : BaseInventory
     {
         [SerializeField] [SyncVar(hook = nameof(OnSyncCardChange))]
-        private int syncCardNumber;
+        public int syncCardNumber;
 
         private OwnerInventory ownerInventory;
 
@@ -25,7 +25,7 @@ namespace FishONU.CardSystem
         {
             ArrangeStrategy = new LinearArrange
             {
-                PositionOffset = new Vector3(0.1f, 0.13f, 0f),
+                PositionOffset = new(0.007f, 0.01f, 0f),
                 StartPosition = cardSpawnPosition
             };
         }
@@ -41,7 +41,7 @@ namespace FishONU.CardSystem
         {
             base.OnStartClient();
 
-            // 中途加入 / 重连
+            // TODO: 中途加入 / 重连 ?
             OnSyncCardChange(0, syncCardNumber);
         }
 
@@ -52,6 +52,7 @@ namespace FishONU.CardSystem
 
             ownerInventory.syncCards.Callback += OnOwnerSyncCardNumberChange;
 
+            // 手动更新
             syncCardNumber = ownerInventory.syncCards.Count;
         }
 
@@ -145,6 +146,13 @@ namespace FishONU.CardSystem
 
             InstantiateAllCards();
             ArrangeAllCards();
+        }
+
+        // [ClientRpc]
+        [ClientRpc]
+        public void RpcManualSyncCardView(int count)
+        {
+            OnSyncCardChange(0, count);
         }
     }
 }

@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 939130537820761834}
   m_Layer: 0
   m_Name: DrawPile
-  m_TagString: Untagged
+  m_TagString: DrawPile
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -89,6 +89,4 @@ MonoBehaviour:
   cardSpawnPosition: {x: 0, y: 0, z: 0}
   syncCardNumber: 0
   cardNumber: 0
-  cardRotationOffset: {x: 0, y: 0, z: 0}
-  cardSpaceOffset: {x: 0, y: 0.05, z: 0}
   cards: []

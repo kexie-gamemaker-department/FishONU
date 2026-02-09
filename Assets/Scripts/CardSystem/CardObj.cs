@@ -22,6 +22,7 @@ namespace FishONU.CardSystem
     }
 
 
+    // TODO: 如果有性能问题就考虑在这使用对象池吧
     public class CardObj : MonoBehaviour
     {
         public bool IsHover { get; private set; }

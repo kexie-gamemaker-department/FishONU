@@ -27,7 +27,8 @@ namespace FishONU.CardSystem
             //     StartPosition = cardSpawnPosition,
             //     PositionOffset = new Vector3(1.3f, 0f, 0f)
             // };
-            ArrangeStrategy = new CenterLinearWithArc
+
+            ArrangeStrategy ??= new CenterLinearWithArc
             {
                 CenterPosition = cardSpawnPosition,
                 PositionOffset = new(0.65f, 0.1f, 0f),
@@ -71,7 +72,6 @@ namespace FishONU.CardSystem
         [Server]
         public override void DebugAddCard(CardInfo cardInfo = null)
         {
-            // TODO: 已知 bug 1: host 模式下加牌会导致 host client 能看到给其他 remote client 加的牌
             cardInfo ??= new CardInfo(Color.Blue, Face.DrawTwo);
 
             syncCards.Add(cardInfo);
@@ -200,8 +200,6 @@ namespace FishONU.CardSystem
 
             foreach (var guid in toRemove)
             {
-                // TODO: add more animation
-                // Destroy(cardObjs[guid]);
                 var obj = cardObjs[guid];
 
                 if (obj.TryGetComponent<CardObj>(out var card))
@@ -213,14 +211,6 @@ namespace FishONU.CardSystem
                     Destroy(obj);
                 }
 
-                // if (obj.TryGetComponent<SpriteRenderer>(out var sp))
-                // {
-                //     sp.DOFade(0, 0.5f).OnComplete(() => { Destroy(obj); });
-                // }
-                // else
-                // {
-                //     Destroy(obj);
-                // }
 
                 cardObjs.Remove(guid);
             }
