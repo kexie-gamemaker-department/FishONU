@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using FishONU.CardSystem;
 using FishONU.GamePlay.GameState;
 using Mirror;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.PlayerLoop;
 using UnityEngine.Serialization;
 
 namespace FishONU.DebugTools
@@ -16,8 +18,11 @@ namespace FishONU.DebugTools
         {
             None,
             Network,
-            Card
+            Card,
+            GameState
         }
+
+        private Dictionary<MenuTab, Action> _menuDrawer;
 
         public string address;
         public string port;
@@ -28,13 +33,30 @@ namespace FishONU.DebugTools
             port = "7777";
         }
 
+        private void Start()
+        {
+            _menuDrawer = new Dictionary<MenuTab, Action>
+            {
+                { MenuTab.Network, DrawNetworkMenu }, // 假设你补上了这个
+                { MenuTab.Card, DrawCardMenu },
+                { MenuTab.GameState, DrawGameStateMenu }
+            };
+        }
+
         private void Update()
         {
             if (!isLocalPlayer) return;
             if (Keyboard.current.f5Key.wasPressedThisFrame)
             {
-                display = display == MenuTab.None ? MenuTab.Card : MenuTab.None;
+                NextPage();
             }
+        }
+
+        private void NextPage()
+        {
+            // 获取枚举总数，实现自动循环
+            int count = Enum.GetNames(typeof(MenuTab)).Length;
+            display = (MenuTab)(((int)display + 1) % count);
         }
 
         private void OnGUI()
@@ -45,68 +67,53 @@ namespace FishONU.DebugTools
             GUI.Box(new Rect(20, 20, 400, 400), "Debug Menu");
             GUILayout.BeginArea(new Rect(25, 45, 350, 300));
 
-            switch (display)
-            {
-                case MenuTab.Network:
-                    DrawGameStateMenu();
-                    break;
-                case MenuTab.Card:
-                    DrawCardMenu();
-                    break;
-            }
+            // 直接执行对应的绘制函数
+            if (_menuDrawer.TryGetValue(display, out var drawAction))
+                drawAction.Invoke();
 
             GUILayout.EndArea();
+        }
+
+
+        // 这里的 T 是组件类型，action 是你要执行的操作
+        private void DebugBtn<T>(string label, Action<T> action, string targetTag = "Self", float width = 150)
+            where T : Component
+        {
+            if (GUILayout.Button(label, GUILayout.Width(width)))
+            {
+                var target = (targetTag == "Self")
+                    ? GetComponent<T>()
+                    : GameObject.FindWithTag(targetTag)?.GetComponent<T>();
+                if (target != null) action(target);
+            }
+        }
+
+        private void DrawNetworkMenu()
+        {
         }
 
         private void DrawGameStateMenu()
         {
             GUILayout.BeginVertical("box");
-            if (GUILayout.Button("Start Game", GUILayout.Width(100)))
-                GameObject.FindWithTag("GameStateManager")?.GetComponent<GameStateManager>()?.StartGame();
+
+            DebugBtn<GameStateManager>("Server Start Game", gm => gm.StartGame(), targetTag: "GameStateManager");
+
             GUILayout.EndVertical();
         }
 
         private void DrawCardMenu()
         {
             GUILayout.BeginVertical("box");
-            if (GUILayout.Button("Add Card", GUILayout.Width(100)))
-            {
-                // 寻找 inventory 然后 add card
-                GetComponent<OwnerInventory>()?.DebugCmdAddCard();
-            }
 
-            if (GUILayout.Button("Remove Card", GUILayout.Width(100)))
-            {
-                GetComponent<OwnerInventory>()?.DebugCmdRemoveCard();
-            }
+            DebugBtn<OwnerInventory>("Command Add Card", inv => inv.DebugCmdAddCard());
+            DebugBtn<OwnerInventory>("Command Remove Card", inv => inv.DebugCmdRemoveCard());
 
-            if (GUILayout.Button("Arrange Card", GUILayout.Width(100)))
-            {
-                GetComponent<OwnerInventory>()?.ArrangeAllCards();
-            }
+            DebugBtn<OwnerInventory>("Command Add DrawPile Card", inv => inv.DebugCmdAddCard(), "DrawPile");
+            DebugBtn<OwnerInventory>("Command Add DrawPile Card", inv => inv.DebugCmdRemoveCard(), "DrawPile");
 
+            DebugBtn<DiscardInventory>("Command Add Discard Card", inv => inv.DebugCmdAddCard(), "DiscardPile");
+            DebugBtn<DiscardInventory>("Command Remove Discard Card", inv => inv.DebugCmdRemoveCard(), "DiscardPile");
 
-            if (GUILayout.Button("Add Secret Card", GUILayout.Width(100)))
-            {
-                // 寻找 inventory 然后 add card
-                GameObject.FindWithTag("Player").GetComponent<SecretInventory>()?.DebugAddCard();
-            }
-
-            if (GUILayout.Button("Remove Secret Card", GUILayout.Width(100)))
-            {
-                GameObject.FindWithTag("Player").GetComponent<SecretInventory>()?.DebugRemoveCard();
-            }
-
-            if (GUILayout.Button("Arrange Secret Card", GUILayout.Width(100)))
-            {
-                GameObject.FindWithTag("Player").GetComponent<SecretInventory>()?.ArrangeAllCards();
-            }
-
-            if (GUILayout.Button("Add Discard Card", GUILayout.Width(100)))
-            {
-                // 寻找 inventory 然后 add card
-                GameObject.FindWithTag("Player").GetComponent<DiscardInventory>()?.AddCard();
-            }
 
             GUILayout.EndVertical();
         }
