@@ -1,29 +1,30 @@
 ﻿using System.Collections.Generic;
+using UnityEngine;
 
 namespace FishONU.CardSystem
 {
     public static class CardInfoFactory
     {
-        public static CardInfo CreateCard(Color color, Face face)
+        public static CardData CreateCard(Color color, Face face)
         {
-            return new CardInfo(color, face);
+            return new CardData(color, face);
         }
 
-        public static List<CardInfo> CreateCards(Color color, Face face, int number = 1)
+        public static List<CardData> CreateCards(Color color, Face face, int number = 1)
         {
-            var cards = new List<CardInfo>();
+            var cards = new List<CardData>();
 
             for (int i = 0; i < number; i++)
             {
-                cards.Add(new CardInfo(color, face));
+                cards.Add(new CardData(color, face));
             }
 
             return cards;
         }
 
-        public static List<CardInfo> CreateStandardDeck()
+        public static List<CardData> CreateStandardDeck()
         {
-            List<CardInfo> deck = new List<CardInfo>();
+            List<CardData> deck = new List<CardData>();
 
             // 有色牌
             Color[] standardColor = { Color.Red, Color.Blue, Color.Green, Color.Yellow };
@@ -42,6 +43,11 @@ namespace FishONU.CardSystem
             deck.AddRange(CardInfoFactory.CreateCards(Color.Black, Face.WildDrawFour, 4));
 
             return deck;
+        }
+
+        public static CardData CreateRandomCard()
+        {
+            return CreateCard((Color)Random.Range(0, 4), (Face)Random.Range(0, 15));
         }
     }
 }

@@ -13,14 +13,16 @@ namespace FishONU.CardSystem
         // TODO: 这个类有点乱，得整理重写一下了
         public int maxCardNumbers = 50;
 
-        private readonly Dictionary<string, GameObject> cardObjs = new();
-        public readonly SyncList<CardInfo> syncCards = new();
+        private readonly Dictionary<string, GameObject> localCardObjs = new();
+        public readonly SyncList<CardData> Cards = new();
 
-        public override int CardNumber => cardObjs.Count;
+        public int LocalCardNumber => localCardObjs.Count;
 
-        public void Awake()
+        #region View
+
+        public override IArrangeStrategy GetDefaultArrangeStrategy()
         {
-            ArrangeStrategy ??= new RandomSpreadArrange
+            return new RandomSpreadArrange
             {
                 CenterPosition = Vector3.zero,
                 MaxOffset = 1f,
@@ -28,38 +30,13 @@ namespace FishONU.CardSystem
             };
         }
 
-        public override void OnStartClient()
-        {
-            syncCards.OnAdd += OnCardListAdd;
-            syncCards.OnClear += OnCardClear;
-        }
-
-        public override void OnStopClient()
-        {
-            syncCards.OnAdd -= OnCardListAdd;
-            syncCards.OnClear -= OnCardClear;
-        }
-
         [Client]
-        private void OnCardListAdd(int index)
+        public void ClientFakeAddCard(CardData cardData)
         {
-            var card = syncCards[index];
-            if (card != null) ClientAddCard(card);
-        }
-
-        [Client]
-        private void OnCardClear()
-        {
-            ClientClearAllCard();
-        }
-
-        [Client]
-        public void ClientAddCard(CardInfo cardInfo)
-        {
-            if (cardInfo == null) return;
+            if (cardData == null) return;
 
             var obj = Instantiate(cardPrefab, gameObject.transform);
-            cardObjs.Add(cardInfo.Guid, obj);
+            localCardObjs.Add(cardData.Guid, obj);
 
             // 移除前面的卡
             // Note: 只是不显示了，实际数据还在 SyncList 里面
@@ -75,11 +52,11 @@ namespace FishONU.CardSystem
             var t = obj.transform;
             t.localPosition = cardSpawnPosition;
 
-            obj.GetComponent<CardObj>().Load(cardInfo);
+            obj.GetComponent<CardObj>().Load(cardData);
 
             // TODO: animation / arrange
 
-            var index = cardObjs.Count - 1;
+            var index = localCardObjs.Count - 1;
             ArrangeStrategy.Calc(index, index + 1,
                 out var pos,
                 out var rot,
@@ -95,37 +72,22 @@ namespace FishONU.CardSystem
         }
 
         [Client]
-        public void ClientRemoveCard(CardInfo cardInfo)
+        public void ClientFakeRemoveCard(CardData cardData)
         {
-            if (cardInfo == null) return;
+            if (cardData == null) return;
 
-            if (!cardObjs.ContainsKey(cardInfo.Guid)) return;
+            if (!localCardObjs.ContainsKey(cardData.Guid)) return;
 
-            var obj = cardObjs[cardInfo.Guid];
+            var obj = localCardObjs[cardData.Guid];
             if (obj == null) return;
 
             obj.GetComponent<CardObj>().FadeOutAndDestory();
         }
 
-        [Command]
-        public void DebugCmdAddCard()
-        {
-            var cardInfo = new CardInfo(Color.Green, Face.DrawTwo);
-            syncCards.Add(cardInfo);
-        }
-
-
-        [Command]
-        public void DebugCmdRemoveCard()
-        {
-            syncCards.RemoveAt(syncCards.Count - 1);
-        }
-
-
         [Client]
-        public void ClientClearAllCard()
+        public void ClientFakeClearAllCard()
         {
-            foreach (var pair in cardObjs)
+            foreach (var pair in localCardObjs)
             {
                 if (pair.Value.TryGetComponent<CardObj>(out var c))
                     c.FadeOutAndDestory();
@@ -133,21 +95,21 @@ namespace FishONU.CardSystem
                     Destroy(pair.Value);
             }
 
-            cardObjs.Clear();
+            localCardObjs.Clear();
         }
 
         [Client]
         public override void ArrangeAllCards()
         {
-            if (syncCards.Count == 0) return;
+            if (Cards.Count == 0) return;
 
-            for (var i = 0; i < syncCards.Count; i++)
+            for (var i = 0; i < Cards.Count; i++)
             {
-                var guid = syncCards[i].Guid;
-                if (cardObjs.TryGetValue(guid, out var obj))
+                var guid = Cards[i].Guid;
+                if (localCardObjs.TryGetValue(guid, out var obj))
                 {
                     var t = obj.transform;
-                    ArrangeStrategy.Calc(i, syncCards.Count, out var pos, out var rotation, out var scale);
+                    ArrangeStrategy.Calc(i, Cards.Count, out var pos, out var rotation, out var scale);
                     t.DOKill();
                     t.transform.DOLocalMove(pos, 0.5f).SetEase(Ease.InOutQuad);
                     t.transform.DOLocalRotate(rotation, 0.5f).SetEase(Ease.InOutQuad);
@@ -160,25 +122,25 @@ namespace FishONU.CardSystem
         public override void InstantiateAllCards()
         {
             // instantiate new cards
-            foreach (var cardInfo in syncCards)
+            foreach (var cardInfo in Cards)
             {
-                if (cardObjs.ContainsKey(cardInfo.Guid)) continue;
+                if (localCardObjs.ContainsKey(cardInfo.Guid)) continue;
 
                 var cardObj = Instantiate(cardPrefab, gameObject.transform);
                 cardObj.transform.localPosition = cardSpawnPosition;
                 cardObj.GetComponent<CardObj>().Load(cardInfo);
-                cardObjs.Add(cardInfo.Guid, cardObj);
+                localCardObjs.Add(cardInfo.Guid, cardObj);
             }
 
             // clean non-exist card
             var cardGuidSet = new HashSet<string>();
-            foreach (var cardInfo in syncCards)
+            foreach (var cardInfo in Cards)
             {
                 cardGuidSet.Add(cardInfo.Guid);
             }
 
             var toRemove = new List<string>();
-            foreach (var pair in cardObjs)
+            foreach (var pair in localCardObjs)
             {
                 if (cardGuidSet.Contains(pair.Key)) continue;
 
@@ -188,7 +150,7 @@ namespace FishONU.CardSystem
             foreach (var guid in toRemove)
             {
                 // Destroy(cardObjs[guid]);
-                var obj = cardObjs[guid];
+                var obj = localCardObjs[guid];
 
                 if (obj.TryGetComponent<CardObj>(out var card))
                 {
@@ -199,14 +161,59 @@ namespace FishONU.CardSystem
                     Destroy(obj);
                 }
 
-                cardObjs.Remove(guid);
+                localCardObjs.Remove(guid);
             }
         }
 
-        [ClientRpc]
-        public void RpcManualSyncCardView(CardInfo cardInfo)
+        #endregion
+
+        #region Network
+
+        public override void OnStartClient()
         {
-            ClientAddCard(cardInfo);
+            Cards.OnChange += OnCardChange;
         }
+
+        public override void OnStopClient()
+        {
+            Cards.OnChange -= OnCardChange;
+        }
+
+        [Client]
+        private void OnCardChange(SyncList<CardData>.Operation arg1, int arg2, CardData arg3)
+        {
+            if (arg1 == SyncList<CardData>.Operation.OP_CLEAR)
+            {
+                ClientFakeClearAllCard();
+                return;
+            }
+
+            RefreshView();
+        }
+
+        [ClientRpc]
+        public void RpcManualSyncCardView(CardData cardData)
+        {
+            ClientFakeAddCard(cardData);
+        }
+
+        #endregion
+
+        #region Debug
+
+        [Command]
+        public void DebugCmdAddCard()
+        {
+            var cardInfo = CardInfoFactory.CreateRandomCard();
+            Cards.Add(cardInfo);
+        }
+
+        [Command]
+        public void DebugCmdRemoveCard()
+        {
+            Cards.RemoveAt(Cards.Count - 1);
+        }
+
+        #endregion
     }
 }

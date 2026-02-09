@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace FishONU.CardSystem
 {
@@ -33,7 +32,7 @@ namespace FishONU.CardSystem
     }
 
     [System.Serializable]
-    public class CardInfo
+    public class CardData
     {
         public Color color;
 
@@ -48,14 +47,14 @@ namespace FishONU.CardSystem
             set => guid = value;
         }
 
-        public CardInfo()
+        public CardData()
         {
             this.color = Color.Black;
             this.face = Face.Back;
             Guid = System.Guid.NewGuid().ToString();
         }
 
-        public CardInfo(Color color = Color.Black, Face face = Face.Back)
+        public CardData(Color color = Color.Black, Face face = Face.Back)
         {
             this.color = color;
             this.face = face;

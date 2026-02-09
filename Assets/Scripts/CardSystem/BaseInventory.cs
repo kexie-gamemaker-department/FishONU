@@ -11,29 +11,22 @@ namespace FishONU.CardSystem
         [SerializeField] protected GameObject cardPrefab;
         [SerializeField] protected Vector3 cardSpawnPosition;
 
-        public abstract int CardNumber { get; }
-
         private IArrangeStrategy _arrangeStrategy;
 
         public IArrangeStrategy ArrangeStrategy
         {
-            get => _arrangeStrategy;
+            get
+            {
+                _arrangeStrategy ??= GetDefaultArrangeStrategy();
+                return _arrangeStrategy;
+            }
             set
             {
+                RefreshView();
                 _arrangeStrategy = value;
-                ArrangeAllCards();
             }
         }
 
-        public virtual void DebugAddCard(CardInfo cardInfo = null)
-        {
-            // used to debug.
-        }
-
-        public virtual void DebugRemoveCard(CardInfo cardInfo = null)
-        {
-            // used to debug.
-        }
 
         protected virtual void Start()
         {
@@ -46,5 +39,16 @@ namespace FishONU.CardSystem
         public abstract void ArrangeAllCards();
 
         public abstract void InstantiateAllCards();
+
+        public virtual IArrangeStrategy GetDefaultArrangeStrategy()
+        {
+            return new LinearArrange();
+        }
+
+        public virtual void RefreshView()
+        {
+            InstantiateAllCards();
+            ArrangeAllCards();
+        }
     }
 }

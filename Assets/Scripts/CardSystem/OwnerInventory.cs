@@ -12,23 +12,18 @@ namespace FishONU.CardSystem
     [System.Serializable]
     public class OwnerInventory : BaseInventory
     {
-        private Dictionary<string, GameObject> cardObjs = new();
+        private Dictionary<string, GameObject> localCardObjs = new();
 
-        public readonly List<CardInfo> cards = new();
-        public readonly SyncList<CardInfo> syncCards = new();
+        public readonly List<CardData> LocalCards = new();
+        public readonly SyncList<CardData> Cards = new();
 
-        public override int CardNumber => cards.Count;
+        public int LocalCardNumber => LocalCards.Count;
 
-        private void Awake()
+        #region View
+
+        public override IArrangeStrategy GetDefaultArrangeStrategy()
         {
-            // card width and height is 1.3f * 1.9f enough.
-            // ArrangeStrategy = new LinearArrange
-            // {
-            //     StartPosition = cardSpawnPosition,
-            //     PositionOffset = new Vector3(1.3f, 0f, 0f)
-            // };
-
-            ArrangeStrategy ??= new CenterLinearWithArc
+            return new CenterLinearWithArc
             {
                 CenterPosition = cardSpawnPosition,
                 PositionOffset = new(0.65f, 0.1f, 0f),
@@ -36,133 +31,36 @@ namespace FishONU.CardSystem
             };
         }
 
-
-        public override void OnStartClient()
-        {
-            // 如果是 host 模式，防止显示其他人的手牌
-            if (!isLocalPlayer) return;
-
-            syncCards.Callback += OnSyncCardChange;
-        }
-
-        public override void OnStopClient()
-        {
-            // 如果是 host 模式，防止显示其他人的手牌
-            if (!isLocalPlayer) return;
-
-            syncCards.Callback -= OnSyncCardChange;
-        }
-
-        [Command]
-        public void DebugCmdAddCard()
-        {
-            var cardInfo = new CardInfo((Color)Random.RandomRange(0, 4), (Face)Random.RandomRange(0, 15));
-
-            syncCards.Add(cardInfo);
-        }
-
-        [Command]
-        public void DebugCmdRemoveCard()
-        {
-            if (syncCards.Count == 0) return;
-
-            syncCards.RemoveAt(Random.Range(0, syncCards.Count));
-        }
-
-        [Server]
-        public override void DebugAddCard(CardInfo cardInfo = null)
-        {
-            cardInfo ??= new CardInfo(Color.Blue, Face.DrawTwo);
-
-            syncCards.Add(cardInfo);
-        }
-
-        [Server]
-        public void DebugRemoveCard()
-        {
-            if (cards.Count == 0) return;
-
-            syncCards.RemoveAt(Random.Range(0, cards.Count));
-        }
-
-
         [Client]
-        public void ClientAddCard(CardInfo cardInfo = null)
+        public void ClientAddCard(CardData cardData)
         {
-            cardInfo ??= new CardInfo();
+            if (cardData == null) return;
 
-            cards.Add(cardInfo);
+            LocalCards.Add(cardData);
 
-            InstantiateAllCards();
-            ArrangeAllCards();
+            RefreshView();
         }
 
         [Client]
-        public void ClientRemoveCard(CardInfo cardInfo = null)
+        public void ClientRemoveCard(CardData cardData)
         {
-            if (cards.Count == 0) return;
+            if (LocalCards.Count == 0) return;
 
-            // 随机删牌
-            if (cardInfo == null)
+            foreach (var c in LocalCards)
             {
-                var count = cards.Count;
-                var index = Random.Range(0, count);
-                cardInfo = cards[index];
+                if (c.Guid != cardData.Guid) continue;
+
+                LocalCards.Remove(c);
+                break;
             }
 
-            cards.Remove(cardInfo);
-
-            InstantiateAllCards();
-            ArrangeAllCards();
-        }
-
-
-        [Client]
-        private void OnSyncCardChange(SyncList<CardInfo>.Operation op, int index, CardInfo oldItem, CardInfo newItem)
-        {
-            cards.Clear();
-            cards.AddRange(syncCards);
-
-            // TODO: 实现增量更新
-            InstantiateAllCards();
-            ArrangeAllCards();
-        }
-
-
-        [Server]
-        public void PlayCard(CardInfo card)
-        {
-            // TODO: play card
-            Debug.Log($"play card: face: {card.face.ToString()}; color: {card.color.ToString()}");
-            cards.Remove(card);
-        }
-
-        [Client]
-        public override void ArrangeAllCards()
-        {
-            if (cards.Count == 0) return;
-
-            SortAllCards();
-
-            for (var i = 0; i < cards.Count; i++)
-            {
-                var guid = cards[i].Guid;
-                if (cardObjs.TryGetValue(guid, out var obj))
-                {
-                    var t = obj.transform;
-                    ArrangeStrategy.Calc(i, cards.Count, out var pos, out var rotation, out var scale);
-                    t.DOKill();
-                    t.transform.DOLocalMove(pos, 0.5f).SetEase(Ease.InOutQuad);
-                    t.transform.DOLocalRotate(rotation, 0.5f).SetEase(Ease.InOutQuad);
-                    t.transform.DOScale(scale, 0.5f).SetEase(Ease.InOutQuad);
-                }
-            }
+            RefreshView();
         }
 
         [Client]
         private void SortAllCards()
         {
-            cards.Sort((a, b) =>
+            LocalCards.Sort((a, b) =>
             {
                 var colorCmp = a.color.CompareTo(b.color);
                 if (colorCmp != 0) return colorCmp;
@@ -175,23 +73,46 @@ namespace FishONU.CardSystem
         }
 
         [Client]
+        public override void ArrangeAllCards()
+        {
+            if (LocalCards.Count == 0) return;
+
+            SortAllCards();
+
+            for (var i = 0; i < LocalCards.Count; i++)
+            {
+                var guid = LocalCards[i].Guid;
+                if (localCardObjs.TryGetValue(guid, out var obj))
+                {
+                    var t = obj.transform;
+                    ArrangeStrategy.Calc(i, LocalCards.Count, out var pos, out var rotation, out var scale);
+                    t.DOKill();
+                    t.transform.DOLocalMove(pos, 0.5f).SetEase(Ease.InOutQuad);
+                    t.transform.DOLocalRotate(rotation, 0.5f).SetEase(Ease.InOutQuad);
+                    t.transform.DOScale(scale, 0.5f).SetEase(Ease.InOutQuad);
+                }
+            }
+        }
+
+
+        [Client]
         public override void InstantiateAllCards()
         {
             // instantiate new cards
-            foreach (var card in cards)
+            foreach (var card in LocalCards)
             {
-                if (cardObjs.ContainsKey(card.Guid)) continue;
+                if (localCardObjs.ContainsKey(card.Guid)) continue;
 
                 var cardObj = Instantiate(cardPrefab, gameObject.transform);
                 cardObj.transform.localPosition = cardSpawnPosition;
                 cardObj.GetComponent<CardObj>().Load(card);
-                cardObjs.Add(card.Guid, cardObj);
+                localCardObjs.Add(card.Guid, cardObj);
             }
 
             // clean non-exist card
-            var cardGuidSet = new HashSet<string>(cards.Select(c => c.Guid));
+            var cardGuidSet = new HashSet<string>(LocalCards.Select(c => c.Guid));
             var toRemove = new List<string>();
-            foreach (var pair in cardObjs)
+            foreach (var pair in localCardObjs)
             {
                 if (cardGuidSet.Contains(pair.Key)) continue;
 
@@ -200,7 +121,7 @@ namespace FishONU.CardSystem
 
             foreach (var guid in toRemove)
             {
-                var obj = cardObjs[guid];
+                var obj = localCardObjs[guid];
 
                 if (obj.TryGetComponent<CardObj>(out var card))
                 {
@@ -212,8 +133,69 @@ namespace FishONU.CardSystem
                 }
 
 
-                cardObjs.Remove(guid);
+                localCardObjs.Remove(guid);
             }
         }
+
+        #endregion
+
+        #region Network
+
+        public override void OnStartClient()
+        {
+            // 如果是 host 模式，防止显示其他人的手牌
+            if (!isLocalPlayer) return;
+
+            Cards.Callback += OnSyncCardChange;
+        }
+
+        public override void OnStopClient()
+        {
+            // 如果是 host 模式，防止显示其他人的手牌
+            if (!isLocalPlayer) return;
+
+            Cards.Callback -= OnSyncCardChange;
+        }
+
+        [Client]
+        private void OnSyncCardChange(SyncList<CardData>.Operation op, int index, CardData oldItem, CardData newItem)
+        {
+            LocalCards.Clear();
+            LocalCards.AddRange(Cards);
+
+            // TODO: 实现增量更新
+            InstantiateAllCards();
+            ArrangeAllCards();
+        }
+
+        [Server]
+        public void PlayCard(CardData card)
+        {
+            // TODO: play card
+            Debug.Log($"play card: face: {card.face.ToString()}; color: {card.color.ToString()}");
+            LocalCards.Remove(card);
+        }
+
+        #endregion
+
+        #region Debug
+
+        [Command]
+        public void DebugCmdAddCard()
+        {
+            var cardInfo = CardInfoFactory.CreateRandomCard();
+
+            Cards.Add(cardInfo);
+        }
+
+        [Command]
+        public void DebugCmdRemoveCard()
+        {
+            if (Cards.Count == 0) return;
+
+            Cards.RemoveAt(Random.Range(0, Cards.Count));
+        }
+
+        #endregion
     }
 }

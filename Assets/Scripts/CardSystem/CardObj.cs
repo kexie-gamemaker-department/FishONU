@@ -28,7 +28,7 @@ namespace FishONU.CardSystem
         public bool IsHover { get; private set; }
         public bool isDrag = false;
 
-        private CardInfo data;
+        private CardData data;
 
         public Action<CardObj> OnCardClick;
 
@@ -57,14 +57,14 @@ namespace FishONU.CardSystem
             }
         }
 
-        public void Load(CardInfo cardInfo)
+        public void Load(CardData cardData)
         {
-            if (cardInfo == null)
+            if (cardData == null)
             {
                 Debug.LogError("CardObj.Load: cardInfo is null");
             }
 
-            data = cardInfo;
+            data = cardData;
 
             // 显示对应贴图
             foreach (var pair in faceSprites)
@@ -82,7 +82,7 @@ namespace FishONU.CardSystem
             }
         }
 
-        public CardInfo GetCardInfo()
+        public CardData GetCardInfo()
         {
             return data;
         }

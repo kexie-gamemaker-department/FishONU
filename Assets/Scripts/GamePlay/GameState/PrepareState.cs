@@ -30,7 +30,7 @@ namespace FishONU.GamePlay.GameState
 
                 var drawPileOwnerInventory = Manager.drawPile.GetComponent<OwnerInventory>();
 
-                drawPileOwnerInventory.syncCards.Clear();
+                drawPileOwnerInventory.Cards.Clear();
 
                 // 生成牌堆
                 var deck = CardInfoFactory.CreateStandardDeck();
@@ -41,20 +41,20 @@ namespace FishONU.GamePlay.GameState
 
                 // 我不知道什么 b bug 导致 AddRange 后没有 Callback
                 // 可能是因为同一帧就不同步了吧，但是底下 players 的 AddRange 是同步的
-                drawPileOwnerInventory.syncCards.AddRange(deck);
+                drawPileOwnerInventory.Cards.AddRange(deck);
                 Manager.drawPile.GetComponent<SecretInventory>()
-                    ?.RpcManualSyncCardView(drawPileOwnerInventory.syncCards.Count);
+                    ?.RpcManualSyncCardView(drawPileOwnerInventory.Cards.Count);
 
 
                 //  发牌
                 foreach (var player in Manager.players)
                 {
                     var playerInventory = player.GetComponent<OwnerInventory>();
-                    var newCards = new List<CardInfo>(7);
+                    var newCards = new List<CardData>(7);
 
                     for (int i = 0; i < 7; i++)
                     {
-                        if (drawPileOwnerInventory.syncCards.TryPop(out var card))
+                        if (drawPileOwnerInventory.Cards.TryPop(out var card))
                         {
                             newCards.Add(card);
                         }
@@ -65,7 +65,7 @@ namespace FishONU.GamePlay.GameState
                         }
                     }
 
-                    playerInventory.syncCards.AddRange(newCards);
+                    playerInventory.Cards.AddRange(newCards);
                 }
 
                 #endregion
@@ -73,20 +73,20 @@ namespace FishONU.GamePlay.GameState
                 #region 弃牌堆初始化
 
                 var discardPileInventory = Manager.discardPile.GetComponent<DiscardInventory>();
-                discardPileInventory.syncCards.Clear();
+                discardPileInventory.Cards.Clear();
 
                 #endregion
 
                 #region 抽牌开始流程
 
-                CardInfo firstCard = null;
+                CardData firstCard = null;
                 while (true)
                 {
-                    if (drawPileOwnerInventory.syncCards.TryPop(out firstCard))
+                    if (drawPileOwnerInventory.Cards.TryPop(out firstCard))
                     {
                         if (firstCard.face == Face.WildDrawFour || firstCard.color == Color.Black)
                         {
-                            drawPileOwnerInventory.syncCards.InsertRandom(firstCard);
+                            drawPileOwnerInventory.Cards.InsertRandom(firstCard);
                             continue;
                         }
 
@@ -100,7 +100,7 @@ namespace FishONU.GamePlay.GameState
                     }
                 }
 
-                discardPileInventory.syncCards.Add(firstCard);
+                discardPileInventory.Cards.Add(firstCard);
 
                 Debug.Log($"抽到第一张牌：{firstCard.color.ToString()} {firstCard.face.ToString()}");
 
