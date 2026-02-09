@@ -38,11 +38,17 @@ namespace FishONU.CardSystem
 
         public override void OnStartClient()
         {
+            // 如果是 host 模式，防止显示其他人的手牌
+            if (!isLocalPlayer) return;
+
             syncCards.Callback += OnSyncCardChange;
         }
 
         public override void OnStopClient()
         {
+            // 如果是 host 模式，防止显示其他人的手牌
+            if (!isLocalPlayer) return;
+
             syncCards.Callback -= OnSyncCardChange;
         }
 
