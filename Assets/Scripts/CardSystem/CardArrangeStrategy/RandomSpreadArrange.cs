@@ -20,7 +20,7 @@ namespace FishONU.CardSystem.CardArrangeStrategy
                 _posOffset.Add(new Vector3(
                     Random.Range(-MaxOffset, MaxOffset),
                     Random.Range(-MaxOffset, MaxOffset),
-                    -index * 0.01f
+                    -_posOffset.Count * 0.01f
                 ));
                 _rotOffset.Add(Random.Range(-MaxRotaion, MaxRotaion));
             }

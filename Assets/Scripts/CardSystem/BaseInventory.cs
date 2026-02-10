@@ -31,8 +31,6 @@ namespace FishONU.CardSystem
         protected virtual void Start()
         {
             if (cardPrefab == null) Debug.LogError("CardPrefab is null");
-            if (cardSpawnPosition == Vector3.zero)
-                cardSpawnPosition = gameObject.transform.position;
         }
 
 
