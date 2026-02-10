@@ -172,6 +172,8 @@ namespace FishONU.CardSystem
         public override void OnStartClient()
         {
             Cards.OnChange += OnCardChange;
+
+            RefreshView();
         }
 
         public override void OnStopClient()
@@ -204,7 +206,7 @@ namespace FishONU.CardSystem
         [Command]
         public void DebugCmdAddCard()
         {
-            var cardInfo = CardInfoFactory.CreateRandomCard();
+            var cardInfo = CardDataFactory.CreateRandomCard();
             Cards.Add(cardInfo);
         }
 

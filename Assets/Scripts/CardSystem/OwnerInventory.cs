@@ -147,6 +147,8 @@ namespace FishONU.CardSystem
             if (!isLocalPlayer) return;
 
             Cards.Callback += OnSyncCardChange;
+
+            RefreshView();
         }
 
         public override void OnStopClient()
@@ -183,7 +185,7 @@ namespace FishONU.CardSystem
         [Command]
         public void DebugCmdAddCard()
         {
-            var cardInfo = CardInfoFactory.CreateRandomCard();
+            var cardInfo = CardDataFactory.CreateRandomCard();
 
             Cards.Add(cardInfo);
         }

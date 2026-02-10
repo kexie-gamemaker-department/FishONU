@@ -34,7 +34,7 @@ namespace FishONU.CardSystem
         {
             return new LinearArrange
             {
-                PositionOffset = new(0.007f, 0.01f, 0f),
+                PositionOffset = new(0.007f, 0.01f, -0.01f),
                 StartPosition = cardSpawnPosition
             };
         }
@@ -119,6 +119,9 @@ namespace FishONU.CardSystem
 
             // TODO: 中途加入 / 重连 ?
             ClientSetCardNumber(CardNumber);
+
+            GetComponent<OwnerInventory>().RefreshView();
+            RefreshView();
         }
 
         public override void OnStartServer()

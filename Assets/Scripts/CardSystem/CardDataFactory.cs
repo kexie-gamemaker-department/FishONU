@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace FishONU.CardSystem
 {
-    public static class CardInfoFactory
+    public static class CardDataFactory
     {
         public static CardData CreateCard(Color color, Face face)
         {
@@ -30,17 +30,17 @@ namespace FishONU.CardSystem
             Color[] standardColor = { Color.Red, Color.Blue, Color.Green, Color.Yellow };
             foreach (var color in standardColor)
             {
-                deck.Add(CardInfoFactory.CreateCard(color, Face.Zero));
+                deck.Add(CardDataFactory.CreateCard(color, Face.Zero));
 
-                for (int i = 1; i < 10; i++) deck.AddRange(CardInfoFactory.CreateCards(color, (Face)i, 2));
+                for (int i = 1; i < 10; i++) deck.AddRange(CardDataFactory.CreateCards(color, (Face)i, 2));
 
-                deck.AddRange(CardInfoFactory.CreateCards(color, Face.Skip, 2));
-                deck.AddRange(CardInfoFactory.CreateCards(color, Face.Reverse, 2));
-                deck.AddRange(CardInfoFactory.CreateCards(color, Face.DrawTwo, 2));
+                deck.AddRange(CardDataFactory.CreateCards(color, Face.Skip, 2));
+                deck.AddRange(CardDataFactory.CreateCards(color, Face.Reverse, 2));
+                deck.AddRange(CardDataFactory.CreateCards(color, Face.DrawTwo, 2));
             }
 
-            deck.AddRange(CardInfoFactory.CreateCards(Color.Black, Face.Wild, 4));
-            deck.AddRange(CardInfoFactory.CreateCards(Color.Black, Face.WildDrawFour, 4));
+            deck.AddRange(CardDataFactory.CreateCards(Color.Black, Face.Wild, 4));
+            deck.AddRange(CardDataFactory.CreateCards(Color.Black, Face.WildDrawFour, 4));
 
             return deck;
         }

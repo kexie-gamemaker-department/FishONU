@@ -39,7 +39,7 @@ namespace FishONU.CardSystem
         public Face face;
 
         // 卡牌唯一标识符
-        [SerializeField] private string guid = "";
+        [SerializeField] public string guid = "";
 
         public string Guid
         {
