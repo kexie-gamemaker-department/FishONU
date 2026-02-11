@@ -228,8 +228,10 @@ namespace FishONU.CardSystem
             // highlight animation
             var t = obj.transform;
 
+            ArrangeStrategy.Calc(index, LocalCards.Count, out var pos, out var rot, out var scale);
+
             t.DOKill();
-            t.DOLocalMove(t.localPosition + new Vector3(0, 0.2f, 0), 0.2f)
+            t.DOLocalMove(pos + new Vector3(0, 0.2f, 0), 0.2f)
                 .SetEase(Ease.InOutQuad);
             t.DOScale(1.2f, 0.2f).SetEase(Ease.InOutQuad);
         }
