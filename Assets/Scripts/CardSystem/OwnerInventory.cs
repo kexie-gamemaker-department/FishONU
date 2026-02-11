@@ -41,7 +41,11 @@ namespace FishONU.CardSystem
                     return;
                 }
 
-                SetHighlightCard(value);
+                var oldValue = _highLightCard;
+                if (_highLightCard != null && _highLightCard.guid == value.guid) _highLightCard = null;
+                else _highLightCard = value;
+
+                ApplyHighlightCard(oldValue);
             }
         }
 
@@ -110,7 +114,7 @@ namespace FishONU.CardSystem
         {
             base.RefreshView();
 
-            SetHighlightCard(_highLightCard);
+            ApplyHighlightCard();
         }
 
         [Client]
@@ -180,24 +184,21 @@ namespace FishONU.CardSystem
 
 
         [Client]
-        private void ResetHighlightCard()
+        private void ResetHighlightCardView(CardData cardData)
         {
-            if (_highLightCard == null) return;
+            if (cardData == null) return;
 
             Debug.Log("ResetHighlightCard");
 
-            var card = _highLightCard;
-            _highLightCard = null;
-
-
-            var index = LocalCards.FindIndex(c => c.guid == card.guid);
-            if (index == -1)
+            var index = LocalCards.FindIndex(c => c.guid == cardData.guid);
+            if (index == -1) return;
+            if (!localCardObjs.TryGetValue(cardData.guid, out var obj))
+            {
+                Debug.LogError($"CardObj not found: {cardData.guid}");
                 return;
+            }
 
-
-            var t = localCardObjs[card.guid].transform;
-
-            _highLightCard = null;
+            var t = obj.transform;
 
             ArrangeStrategy.Calc(index, LocalCards.Count, out Vector3 pos, out var rot, out var scale);
 
@@ -209,38 +210,43 @@ namespace FishONU.CardSystem
 
 
         [Client]
-        private void SetHighlightCard(CardData cardData = null)
+        private void SetHighlightCardView(CardData cardData)
         {
             if (cardData == null) return;
 
             Debug.Log($"SetHighlightCard: {cardData.guid}");
 
-            // set the animation sign
-
-            if (_highLightCard != null && _highLightCard.guid == cardData.guid)
-            {
-                // 取消高光因为点了一张卡两次
-                ResetHighlightCard();
-                return;
-            }
-
-            // reset old highlight card.
-            // 不需要设置动画状态，因为上面已经保证了重置动画的卡片和接下来要进行动画的卡片是不一样的
-            ResetHighlightCard();
-
-            _highLightCard = cardData;
-
             // highlight new card
             var index = LocalCards.FindIndex(c => c.guid == cardData.guid);
             if (index == -1) return;
+            if (!localCardObjs.TryGetValue(cardData.guid, out var obj))
+            {
+                Debug.LogError($"CardObj not found: {cardData.guid}");
+                return;
+            }
 
             // highlight animation
-            var t = localCardObjs[cardData.guid].transform;
+            var t = obj.transform;
 
             t.DOKill();
             t.DOLocalMove(t.localPosition + new Vector3(0, 0.2f, 0), 0.2f)
                 .SetEase(Ease.InOutQuad);
             t.DOScale(1.2f, 0.2f).SetEase(Ease.InOutQuad);
+        }
+
+        [Client]
+        private void ApplyHighlightCard(CardData oldValue = null)
+        {
+            if (oldValue != null)
+            {
+                if (_highLightCard != null && oldValue.guid == _highLightCard.guid) return;
+
+                ResetHighlightCardView(oldValue);
+            }
+
+            if (_highLightCard == null) return;
+
+            SetHighlightCardView(_highLightCard);
         }
 
         #endregion
