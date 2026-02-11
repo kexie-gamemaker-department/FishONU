@@ -165,7 +165,6 @@ namespace FishONU.Player
             displayName = IdentifierHelper.RandomIdentifier();
 
 
-
             Debug.Log($"Player {displayName} with guid {guid} is created on server");
         }
 
@@ -251,32 +250,68 @@ namespace FishONU.Player
                 return;
             }
 
-            CmdTryPlayCard(card);
+            CmdPlayCard(card);
         }
 
         [Command]
-        public void CmdTryPlayCard(CardData card)
+        public void CmdPlayCard(CardData card)
         {
             if (card == null)
             {
-                Debug.LogError($"Try to Play a null card");
+                Debug.LogWarning($"Player {guid}({displayName}) try to play a null card");
                 return;
             }
 
-            // validate card
-            var c = ownerInventory.Cards.Find(c => c.guid == card.guid);
-            if (c == null)
+            // 必须是玩家的出牌阶段
+            if (!gm.CanPlayerAction(guid))
             {
-                Debug.LogWarning(
-                    $"Try to Play a card that is not in the inventory: {card.guid} {card.face.ToString()} {card.color.ToString()}");
+                Debug.LogWarning($"Player {guid}({displayName}) Try to play card when it's not player's turn");
                 return;
             }
 
-            // discard card
-            // TODO: 应该是 gm 干的，不过先这样吧
-            ownerInventory.Cards.Remove(c);
-            gm.discardPile.GetComponent<DiscardInventory>().Cards.Add(c);
+            // 必须是能打出的卡
+            if (!gm.CanCardPlay(card))
+            {
+                Debug.LogWarning($"Player {guid}({displayName}) Try to play card but it's not a suitable card.");
+                return;
+            }
+
+            // 必须是自己的卡
+            if (!HasCard(card))
+            {
+                Debug.LogWarning($"Player {guid}({displayName}) Try to play card but it's not his card.");
+                return;
+            }
+
+            gm.PlayCard(guid, card);
         }
+
+        [Client]
+        public void TryDrawCard()
+        {
+            CmdDrawCard();
+        }
+
+        [Command]
+        public void CmdDrawCard()
+        {
+            // 必须是玩家的出牌阶段
+            if (!gm.CanPlayerAction(guid))
+            {
+                Debug.LogWarning($"Player {guid}({displayName}) Try to draw card when it's not player's turn");
+                return;
+            }
+
+            // 必须能抽牌
+            if (!gm.CanDrawCard())
+            {
+                Debug.LogError($"Player {guid}({displayName}) Try to draw card but it's not a worst time.");
+                return;
+            }
+
+            gm.DrawCard(guid);
+        }
+
 
         [Server]
         private void ValidateAndPlayCard(CardData card)
@@ -290,6 +325,36 @@ namespace FishONU.Player
             }
 
             ownerInventory.PlayCard(c);
+        }
+
+        public bool HasCard(CardData cardData)
+        {
+            if (ownerInventory == null) return false;
+            return ownerInventory.HasCard(cardData);
+        }
+
+        [Server]
+        public void AddCard(CardData cardData)
+        {
+            if (ownerInventory == null)
+            {
+                Debug.LogWarning("AddCard: ownerInventory is null");
+                return;
+            }
+
+            ownerInventory.Cards.Add(cardData);
+        }
+
+        [Server]
+        public void RemoveCard(CardData cardData)
+        {
+            if (ownerInventory == null)
+            {
+                Debug.LogWarning("RemoveCard: ownerInventory is null");
+                return;
+            }
+
+            ownerInventory.Cards.Remove(cardData);
         }
 
         #endregion

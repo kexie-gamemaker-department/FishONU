@@ -1,17 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
 using DG.Tweening;
 using FishONU.CardSystem.CardArrangeStrategy;
 using Mirror;
-using Mirror.Examples.Common.Controllers.Tank;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 namespace FishONU.CardSystem
 {
-    [System.Serializable]
+    [Serializable]
     public class OwnerInventory : BaseInventory
     {
         private Dictionary<string, GameObject> localCardObjs = new();
@@ -290,6 +288,12 @@ namespace FishONU.CardSystem
             Debug.Log($"play card: face: {card.face.ToString()}; color: {card.color.ToString()}");
             LocalCards.Remove(card);
         }
+
+        #endregion
+
+        #region GamePlay
+
+        public bool HasCard(CardData cardData) => Cards.Contains(cardData);
 
         #endregion
 

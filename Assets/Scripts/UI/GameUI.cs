@@ -1,6 +1,7 @@
 ﻿using System;
 using FishONU.Player;
 using Mirror;
+using Mirror.Examples.Common.Controllers.Tank;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -9,10 +10,13 @@ namespace FishONU.UI
     public class GameUI : MonoBehaviour
     {
         [SerializeField] private Button submitCardButton;
+        [SerializeField] private Button drawCardButton;
 
         public static GameUI Instance;
 
         private PlayerController player;
+
+        private bool isTurn;
 
         private void Awake()
         {
@@ -23,7 +27,10 @@ namespace FishONU.UI
         private void Start()
         {
             if (submitCardButton == null) Debug.LogError("SubmitCardButton is null");
-            submitCardButton.onClick.AddListener(OnSubmitCardButtonClick);
+            else submitCardButton.onClick.AddListener(OnSubmitCardButtonClick);
+
+            if (drawCardButton == null) Debug.LogError("DrawCardButton is null");
+            else drawCardButton.onClick.AddListener(OnDrawCardButtonClick);
         }
 
         private void OnDestroy()
@@ -43,6 +50,10 @@ namespace FishONU.UI
 
             // bind event;
             player.OnTurnViewSwitch += OnTurnSwitch;
+
+            // initial refresh view.
+            isTurn = player.isOwnersTurn;
+            RefreshView();
         }
 
         private void UnbindPlayer()
@@ -56,16 +67,43 @@ namespace FishONU.UI
             player.OnTurnViewSwitch -= OnTurnSwitch;
         }
 
+        #region View
+
+        private void RefreshView()
+        {
+            submitCardButton.interactable = isTurn;
+            drawCardButton.interactable = isTurn;
+        }
+
         private void OnSubmitCardButtonClick()
         {
-            if (player == null) Debug.LogError("NetworkClient.localPlayer is null");
+            if (player == null)
+            {
+                Debug.LogError("PlayerController is null");
+                return;
+            }
 
-            player.GetComponent<PlayerController>().TryPlayCard();
+            player.TryPlayCard();
         }
+
+        private void OnDrawCardButtonClick()
+        {
+            if (player == null)
+            {
+                Debug.Log("PlayerController is null");
+                return;
+            }
+
+            player.TryDrawCard();
+        }
+
+        #endregion
+
 
         private void OnTurnSwitch(bool oldValue, bool newValue)
         {
-            submitCardButton.interactable = newValue;
+            isTurn = newValue;
+            RefreshView();
         }
     }
 }

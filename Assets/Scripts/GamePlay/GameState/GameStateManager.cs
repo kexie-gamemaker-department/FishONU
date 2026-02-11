@@ -1,38 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Security;
 using FishONU.CardSystem;
 using FishONU.CardSystem.CardArrangeStrategy;
+using FishONU.Player;
+using FishONU.Utils;
 using Mirror;
+using Mirror.Examples.Common.Controllers.Tank;
 using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.SocialPlatforms;
+using Color = FishONU.CardSystem.Color;
 
 namespace FishONU.GamePlay.GameState
 {
-    [Serializable]
-    public struct GameStateData
-    {
-        public int currentPlayerIndex; // 如果是玩家回合，出牌玩家的座位号
-        public bool turnDirection; // true 是顺时针，false 是逆时针
-        public int drawPenaltyStack; // +2 +4 累积牌数
-        public CardData topCardData; // 弃牌堆顶牌
-    }
-
     public class GameStateManager : NetworkBehaviour
     {
-        // TODO:
-
         [SyncVar(hook = nameof(OnStateChange))]
         private GameStateEnum CurrentStateEnum = GameStateEnum.None;
 
-        [SyncVar] private GameStateData data = new GameStateData()
-        {
-            currentPlayerIndex = 0,
-            turnDirection = true,
-            drawPenaltyStack = 0,
-            topCardData = new CardData()
-        };
+
+        // TODO: 早晚得和 PlayerController 的座位合并一下
+        [SyncVar] public int currentPlayerIndex = 0;
+        [SyncVar] public int turnDirection = 1;
+        [SyncVar] public int drawPenaltyStack = 0;
+        [SyncVar] public CardData topCardData = new CardData();
 
         public GameState LocalState { get; private set; }
 
@@ -42,7 +35,7 @@ namespace FishONU.GamePlay.GameState
         public GameObject discardPilePrefab;
         public Transform discardPileSpawnAnchor;
 
-        [Header("游戏")] public List<GameObject> players = new List<GameObject>();
+        [Header("游戏")] public List<PlayerController> players = new List<PlayerController>();
         public GameObject drawPile;
         public GameObject discardPile;
 
@@ -119,7 +112,10 @@ namespace FishONU.GamePlay.GameState
             Debug.Log("StartGame");
 
             // TODO: 先用着，后面再重写
-            var currentPlayers = GameObject.FindGameObjectsWithTag("Player");
+            var currentPlayers = GameObject.FindGameObjectsWithTag("Player")
+                .Select(go => go.GetComponent<PlayerController>())
+                .Where(p => p != null)
+                .ToArray();
             players.AddRange(currentPlayers);
 
 
@@ -147,6 +143,144 @@ namespace FishONU.GamePlay.GameState
         #endregion
 
         #region Gameplay
+
+        [Server]
+        public void PlayCard(string playerGuid, CardData card)
+        {
+            // 参数加上 guid 主要是一种直觉上的方便，虽然根本没用到
+            if (playerGuid == null || card == null)
+            {
+                Debug.LogError($"PlayCard: guid: {playerGuid}, card: {card}");
+                return;
+            }
+
+            // 删卡
+            var player = players.Find(p => p.guid == playerGuid);
+            if (player == null)
+            {
+                Debug.Log($"Player {playerGuid} not found");
+            }
+
+            // TODO: pile controller
+            var discardPileInventory = discardPile.GetComponent<DiscardInventory>();
+            if (discardPileInventory == null)
+            {
+                Debug.LogError($"discardPile.GetComponent<DiscardInventory>() is null");
+                return;
+            }
+
+            player.RemoveCard(card);
+            discardPileInventory.Cards.Add(card);
+
+            topCardData = card;
+
+            Debug.Log($"Player {playerGuid} plays card {card}");
+
+            NextPlayer();
+            // TODO: 先不管功能牌，把 PlayerTurnState 搞好再说
+        }
+
+        [Server]
+        public void DrawCard(string playerGuid)
+        {
+            // TODO:
+            if (playerGuid == null)
+            {
+                Debug.LogError($"DrawCard: guid: {playerGuid}");
+                return;
+            }
+
+            // 抽卡
+            var player = players.Find(p => p.guid == playerGuid);
+            if (player == null)
+            {
+                Debug.Log($"Player {playerGuid} not found");
+                return;
+            }
+
+            // TODO: pile controller
+            var drawPileInventory = drawPile.GetComponent<OwnerInventory>();
+            if (drawPileInventory == null)
+            {
+                Debug.LogError($"drawPile.GetComponent<OwnerInventory>() is null");
+                return;
+            }
+
+
+            if (drawPileInventory.Cards.TryPop(out var card))
+            {
+                player.AddCard(card);
+            }
+            else
+            {
+                Debug.LogError($"drawPileInventory.Cards.TryPop() is null");
+                return;
+            }
+
+            Debug.Log($"Player {playerGuid} draws card");
+
+            NextPlayer();
+        }
+
+
+        [Server]
+        public bool CanPlayerAction(string playerGuid)
+        {
+            if (playerGuid == null)
+            {
+                Debug.LogError($"IsPlayerTurn: playerGuid is null");
+                return false;
+            }
+
+            // 不是玩家的回合不能打牌
+            var index = players.FindIndex(p => p.guid == playerGuid);
+            return index == currentPlayerIndex;
+        }
+
+
+        [Server]
+        public bool CanCardPlay(CardData card)
+        {
+            if (card == null)
+            {
+                Debug.LogError($"CanPlayCard: card is null");
+                return false;
+            }
+
+            if (card.color == Color.Black) // 黑牌肯定能打出
+                return true;
+
+            if (card.color == topCardData.color || // 同色可打出
+                card.color == topCardData.secondColor || // 黑牌变成的颜色相同也可以打出
+                card.face == topCardData.face) // 同牌面可打出
+                return true;
+
+            return false;
+        }
+
+        [Server]
+        public bool CanDrawCard()
+        {
+            // 抽牌堆还有牌
+            // TODO: 按理说应该是 drawPileController (PileController) 来弄的，回头再重构吧
+            var ownerInventory = drawPile.GetComponent<OwnerInventory>();
+            if (ownerInventory == null)
+                return false;
+
+            return ownerInventory.Cards.Count > 0;
+
+            // TODO: 自动洗牌
+        }
+
+        [Server]
+        public void NextPlayer()
+        {
+            // set index
+            currentPlayerIndex = (currentPlayerIndex + turnDirection) % players.Count;
+
+            // set state
+            ChangeState(GameStateEnum.PlayerTurn);
+        }
 
         #endregion
     }
