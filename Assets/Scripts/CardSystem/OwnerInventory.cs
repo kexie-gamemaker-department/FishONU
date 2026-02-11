@@ -23,7 +23,6 @@ namespace FishONU.CardSystem
 
         private CardData _highLightCard;
 
-        // TODO: Highlight 在多人游玩的时候 remote client 报错，需要修
         public CardData HighlightCard
         {
             get => _highLightCard;
