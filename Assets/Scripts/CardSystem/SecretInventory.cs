@@ -97,7 +97,7 @@ namespace FishONU.CardSystem
                     var obj = localCards[i];
                     if (obj.TryGetComponent<CardObj>(out var card))
                     {
-                        card.FadeOutAndDestory();
+                        card.FadeOutAndDestroy();
                     }
                     else
                     {

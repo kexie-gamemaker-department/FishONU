@@ -105,7 +105,14 @@ namespace FishONU.GamePlay.GameState
 
             #endregion
 
-            // 开始游戏，进入出牌阶段
+            // 初始化游戏状态
+            manager.currentPlayerIndex = Random.Range(0, manager.players.Count);
+            manager.turnDirection = 1;
+            manager.drawPenaltyStack = 0;
+            manager.topCardData = firstCard;
+
+            // 开始游戏
+            manager.ChangeState(GameStateEnum.PlayerTurn);
         }
 
         protected override void OnClientEnter(GameStateManager manager)

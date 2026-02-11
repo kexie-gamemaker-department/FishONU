@@ -33,7 +33,8 @@ namespace FishONU.GamePlay.GameState
             PlayerTurnState => GameStateEnum.PlayerTurn,
             GameOverState => GameStateEnum.GameOver,
             EffectProcessingState => GameStateEnum.EffectProcessing,
-            _ => throw new ArgumentOutOfRangeException(nameof(gameState), $"无法识别的状态类: {gameState}"),
+            null => GameStateEnum.None,
+            _ => throw new ArgumentOutOfRangeException(nameof(gameState), $"无法识别的状态类: {nameof(gameState)}"),
         };
     }
 

@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace FishONU.CardSystem
 {
@@ -31,10 +32,11 @@ namespace FishONU.CardSystem
         Back // 背面
     }
 
-    [System.Serializable]
-    public class CardData
+    [Serializable]
+    public class CardData : IEquatable<CardData>
     {
         public Color color;
+        public Color secondColor; // 用于黑牌变色，默认值是 Black
 
         public Face face;
 
@@ -49,8 +51,9 @@ namespace FishONU.CardSystem
 
         public CardData()
         {
-            this.color = Color.Black;
-            this.face = Face.Back;
+            color = Color.Black;
+            face = Face.Back;
+            secondColor = Color.Black;
             Guid = System.Guid.NewGuid().ToString();
         }
 
@@ -60,5 +63,29 @@ namespace FishONU.CardSystem
             this.face = face;
             Guid = System.Guid.NewGuid().ToString();
         }
+
+
+        public bool Equals(CardData other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+
+            return guid == other.guid && color == other.color && face == other.face;
+        }
+
+        public override bool Equals(object obj) => Equals(obj as CardData);
+
+        public override int GetHashCode()
+        {
+            return guid != null ? guid.GetHashCode() : 0;
+        }
+
+        public static bool operator ==(CardData left, CardData right)
+        {
+            if (left is null) return right is null;
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(CardData left, CardData right) => !(left == right);
     }
 }

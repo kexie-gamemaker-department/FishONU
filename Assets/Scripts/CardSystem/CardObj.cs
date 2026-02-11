@@ -7,7 +7,7 @@ using UColor = UnityEngine.Color;
 
 namespace FishONU.CardSystem
 {
-    [System.Serializable]
+    [Serializable]
     public struct UFaceSpritePair
     {
         public Face face;
@@ -28,7 +28,7 @@ namespace FishONU.CardSystem
         public bool IsHover { get; private set; }
         public bool isDrag = false;
 
-        private CardData data;
+        public CardData data;
 
         public Action<CardObj> OnCardClick;
 
@@ -57,6 +57,7 @@ namespace FishONU.CardSystem
             }
         }
 
+
         public void Load(CardData cardData)
         {
             if (cardData == null)
@@ -65,6 +66,12 @@ namespace FishONU.CardSystem
             }
 
             data = cardData;
+
+            if (data == null)
+            {
+                Debug.LogError("CardObj.Load: cardInfo is null");
+                return;
+            }
 
             // 显示对应贴图
             foreach (var pair in faceSprites)
@@ -87,10 +94,15 @@ namespace FishONU.CardSystem
             return data;
         }
 
-        public void FadeOutAndDestory()
+        public void FadeOutAndDestroy(float time = 0f)
         {
             if (spriteRenderer == null) Destroy(gameObject);
-            spriteRenderer.DOFade(0, 0.5f).OnComplete(() => Destroy(gameObject));
+
+            transform.DOKill();
+
+            if (time == 0f) Destroy(gameObject);
+
+            spriteRenderer.DOFade(0, time).OnComplete(() => Destroy(gameObject));
         }
 
         private void OnMouseEnter()

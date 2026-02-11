@@ -9,7 +9,7 @@ using Random = UnityEngine.Random;
 
 namespace FishONU.CardSystem
 {
-    [System.Serializable]
+    [Serializable]
     public class OwnerInventory : BaseInventory
     {
         private Dictionary<string, GameObject> localCardObjs = new();
@@ -18,6 +18,33 @@ namespace FishONU.CardSystem
         public readonly SyncList<CardData> Cards = new();
 
         public int LocalCardNumber => LocalCards.Count;
+
+        private CardData _highLightCard;
+
+        public CardData HighlightCard
+        {
+            get => _highLightCard;
+            set
+            {
+                if (value == null)
+                {
+                    Debug.LogError("HighlightCardObj is not CardObj");
+                    return;
+                }
+
+                if (!localCardObjs.ContainsKey(value.guid))
+                {
+                    Debug.LogError("HighlightCard is not in localCardObjs");
+                    return;
+                }
+
+                var oldValue = _highLightCard;
+                if (_highLightCard != null && _highLightCard.guid == value.guid) _highLightCard = null;
+                else _highLightCard = value;
+
+                ApplyHighlightCard(oldValue);
+            }
+        }
 
         #region View
 
@@ -70,6 +97,21 @@ namespace FishONU.CardSystem
 
                 return String.Compare(a.Guid, b.Guid, StringComparison.Ordinal);
             });
+        }
+
+
+        /// <summary>
+        /// 重新加载数据到视图
+        /// 
+        /// 疑似 bug: 不要和 SetHighlightCard 在同一帧使用，因为 RefreshView 会覆盖动画
+        /// 正常情况应该不会遇到，但是预防一下
+        /// </summary>
+        [Client]
+        public override void RefreshView()
+        {
+            base.RefreshView();
+
+            ApplyHighlightCard();
         }
 
         [Client]
@@ -125,7 +167,7 @@ namespace FishONU.CardSystem
 
                 if (obj.TryGetComponent<CardObj>(out var card))
                 {
-                    card.FadeOutAndDestory();
+                    card.FadeOutAndDestroy();
                 }
                 else
                 {
@@ -135,6 +177,75 @@ namespace FishONU.CardSystem
 
                 localCardObjs.Remove(guid);
             }
+        }
+
+
+        [Client]
+        private void ResetHighlightCardView(CardData cardData)
+        {
+            if (cardData == null) return;
+
+            Debug.Log("ResetHighlightCard");
+
+            var index = LocalCards.FindIndex(c => c.guid == cardData.guid);
+            if (index == -1) return;
+            if (!localCardObjs.TryGetValue(cardData.guid, out var obj))
+            {
+                Debug.LogError($"CardObj not found: {cardData.guid}");
+                return;
+            }
+
+            var t = obj.transform;
+
+            ArrangeStrategy.Calc(index, LocalCards.Count, out Vector3 pos, out var rot, out var scale);
+
+            t.DOKill();
+            t.DOLocalMove(pos, 0.2f).SetEase(Ease.InOutQuad);
+            t.DOLocalRotate(rot, 0.2f).SetEase(Ease.InOutQuad);
+            t.DOScale(scale, 0.2f).SetEase(Ease.InOutQuad);
+        }
+
+
+        [Client]
+        private void SetHighlightCardView(CardData cardData)
+        {
+            if (cardData == null) return;
+
+            Debug.Log($"SetHighlightCard: {cardData.guid}");
+
+            // highlight new card
+            var index = LocalCards.FindIndex(c => c.guid == cardData.guid);
+            if (index == -1) return;
+            if (!localCardObjs.TryGetValue(cardData.guid, out var obj))
+            {
+                Debug.LogError($"CardObj not found: {cardData.guid}");
+                return;
+            }
+
+            // highlight animation
+            var t = obj.transform;
+
+            ArrangeStrategy.Calc(index, LocalCards.Count, out var pos, out var rot, out var scale);
+
+            t.DOKill();
+            t.DOLocalMove(pos + new Vector3(0, 0.2f, 0), 0.2f)
+                .SetEase(Ease.InOutQuad);
+            t.DOScale(1.2f, 0.2f).SetEase(Ease.InOutQuad);
+        }
+
+        [Client]
+        private void ApplyHighlightCard(CardData oldValue = null)
+        {
+            if (oldValue != null)
+            {
+                if (_highLightCard != null && oldValue.guid == _highLightCard.guid) return;
+
+                ResetHighlightCardView(oldValue);
+            }
+
+            if (_highLightCard == null) return;
+
+            SetHighlightCardView(_highLightCard);
         }
 
         #endregion
@@ -177,6 +288,12 @@ namespace FishONU.CardSystem
             Debug.Log($"play card: face: {card.face.ToString()}; color: {card.color.ToString()}");
             LocalCards.Remove(card);
         }
+
+        #endregion
+
+        #region GamePlay
+
+        public bool HasCard(CardData cardData) => Cards.Contains(cardData);
 
         #endregion
 

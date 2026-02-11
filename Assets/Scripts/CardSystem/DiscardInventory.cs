@@ -81,7 +81,7 @@ namespace FishONU.CardSystem
             var obj = localCardObjs[cardData.Guid];
             if (obj == null) return;
 
-            obj.GetComponent<CardObj>().FadeOutAndDestory();
+            obj.GetComponent<CardObj>().FadeOutAndDestroy();
         }
 
         [Client]
@@ -90,7 +90,7 @@ namespace FishONU.CardSystem
             foreach (var pair in localCardObjs)
             {
                 if (pair.Value.TryGetComponent<CardObj>(out var c))
-                    c.FadeOutAndDestory();
+                    c.FadeOutAndDestroy();
                 else
                     Destroy(pair.Value);
             }
@@ -154,7 +154,7 @@ namespace FishONU.CardSystem
 
                 if (obj.TryGetComponent<CardObj>(out var card))
                 {
-                    card.FadeOutAndDestory();
+                    card.FadeOutAndDestroy();
                 }
                 else
                 {
