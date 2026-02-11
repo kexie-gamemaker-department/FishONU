@@ -122,6 +122,17 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!114 &5377062 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 2588482117068887458, guid: 287e6e70b6919c642b0513931c7626d8, type: 3}
+  m_PrefabInstance: {fileID: 679570897}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83c80ae40151430b9e5da60d62ec09f7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &68248370
 GameObject:
   m_ObjectHideFlags: 0
@@ -2557,6 +2568,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   submitCardButton: {fileID: 277327926}
   drawCardButton: {fileID: 1417563721}
+  currentTurnText: {fileID: 1925173517}
+  gm: {fileID: 5377062}
 --- !u!1 &1910524085
 GameObject:
   m_ObjectHideFlags: 0
@@ -2675,8 +2688,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
-  m_AnchoredPosition: {x: -359, y: -121}
-  m_SizeDelta: {x: 200, y: 50}
+  m_AnchoredPosition: {x: -37.651, y: -121}
+  m_SizeDelta: {x: 842.7, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1925173517
 MonoBehaviour:

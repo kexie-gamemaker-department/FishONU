@@ -1,7 +1,6 @@
-﻿using System;
+﻿using FishONU.GamePlay.GameState;
 using FishONU.Player;
-using Mirror;
-using Mirror.Examples.Common.Controllers.Tank;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,12 +10,12 @@ namespace FishONU.UI
     {
         [SerializeField] private Button submitCardButton;
         [SerializeField] private Button drawCardButton;
+        [SerializeField] private TextMeshProUGUI currentTurnText;
+        [SerializeField] public GameStateManager gm;
 
         public static GameUI Instance;
 
         private PlayerController player;
-
-        private bool isTurn;
 
         private void Awake()
         {
@@ -31,11 +30,24 @@ namespace FishONU.UI
 
             if (drawCardButton == null) Debug.LogError("DrawCardButton is null");
             else drawCardButton.onClick.AddListener(OnDrawCardButtonClick);
+
+            if (currentTurnText == null) Debug.LogError("CurrentTurnText is null");
+            else currentTurnText.text = "";
+
+            if (gm == null) Debug.LogError("GameStateManager is null");
+            else
+            {
+                gm.OnStateEnumChange += OnGameStatEnumChange;
+            }
         }
 
         private void OnDestroy()
         {
             if (player != null) UnbindPlayer();
+            if (gm != null)
+            {
+                gm.OnStateEnumChange -= OnGameStatEnumChange;
+            }
         }
 
         public void BindPlayer(PlayerController playerController)
@@ -69,10 +81,15 @@ namespace FishONU.UI
 
         #region View
 
+        private bool isTurn;
+        private string currentPlayerDisplayName;
+
         private void RefreshView()
         {
             submitCardButton.interactable = isTurn;
             drawCardButton.interactable = isTurn;
+
+            currentTurnText.text = currentPlayerDisplayName != null ? $"当前回合: {currentPlayerDisplayName}" : "";
         }
 
         private void OnSubmitCardButtonClick()
@@ -99,11 +116,28 @@ namespace FishONU.UI
 
         #endregion
 
+        #region Out Delegate Handler
 
         private void OnTurnSwitch(bool oldValue, bool newValue)
         {
             isTurn = newValue;
             RefreshView();
         }
+
+        private void OnGameStatEnumChange(GameStateEnum oldValue, GameStateEnum newValue)
+        {
+            var p = gm.GetCurrentPlayer();
+
+            if (p == null)
+            {
+                Debug.LogError("OnGameStateEnumChange: PlayerController is null");
+                return;
+            }
+
+            currentPlayerDisplayName = p.displayName;
+            RefreshView();
+        }
+
+        #endregion
     }
 }

@@ -39,6 +39,8 @@ namespace FishONU.GamePlay.GameState
         public GameObject drawPile;
         public GameObject discardPile;
 
+        public Action<GameStateEnum, GameStateEnum> OnStateEnumChange;
+
         public override void OnStartServer()
         {
             // load anchor
@@ -125,9 +127,14 @@ namespace FishONU.GamePlay.GameState
         public void ChangeState(GameStateEnum stateEnum)
         {
             LocalState?.Exit(this);
+
+            var oldStateEnum = LocalState.GetEnum();
+
             LocalState = stateEnum.GetState();
 
             LocalState.Enter(this);
+
+            OnStateEnumChange?.Invoke(oldStateEnum, stateEnum);
 
             if (isServer)
                 CurrentStateEnum = stateEnum;
@@ -143,6 +150,8 @@ namespace FishONU.GamePlay.GameState
         #endregion
 
         #region Gameplay
+
+        public PlayerController GetCurrentPlayer() => players[currentPlayerIndex];
 
         [Server]
         public void PlayCard(string playerGuid, CardData card)
