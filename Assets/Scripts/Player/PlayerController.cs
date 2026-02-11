@@ -1,6 +1,8 @@
-﻿using FishONU.CardSystem;
+﻿using System;
+using FishONU.CardSystem;
 using FishONU.CardSystem.CardArrangeStrategy;
 using FishONU.GamePlay.GameState;
+using FishONU.UI;
 using Mirror;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -14,12 +16,15 @@ namespace FishONU.Player
     {
         [SerializeField, HideInInspector] private OwnerInventory ownerInventory;
         [SerializeField, HideInInspector] private SecretInventory secretInventory;
+
         private GameStateManager gm;
 
         // TODO: 智能入座
 
         [SyncVar(hook = nameof(OnSeatIndexChange))]
         public int seatIndex;
+
+        [SyncVar(hook = nameof(OnTurnSwitch))] public bool isOwnersTurn;
 
         private void Start()
         {
@@ -67,6 +72,8 @@ namespace FishONU.Player
         }
 
         #region View
+
+        public Action<bool, bool> OnTurnViewSwitch;
 
         [Client]
         private static void TryArrangeAllSeats()
@@ -146,6 +153,15 @@ namespace FishONU.Player
             }
         }
 
+        public override void OnStartLocalPlayer()
+        {
+            base.OnStartLocalPlayer();
+
+            // bind ui event
+            GameUI.Instance.BindPlayer(this);
+        }
+
+
         [Server]
         public void SitDown()
         {
@@ -197,6 +213,11 @@ namespace FishONU.Player
             Debug.Log(
                 $"{gameObject.name}'s seat index changed from {oldValue} to {newValue}, try to arrange all seats");
             TryArrangeAllSeats();
+        }
+
+        public void OnTurnSwitch(bool oldValue, bool newValue)
+        {
+            if (isClient) OnTurnViewSwitch?.Invoke(oldValue, newValue);
         }
 
         #endregion
