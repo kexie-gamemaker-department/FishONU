@@ -328,7 +328,7 @@ namespace FishONU.Player
             // 必须能抽牌
             if (!gm.CanDrawCard())
             {
-                Debug.LogError($"Player {guid}({displayName}) Try to draw card but it's not a worst time.");
+                Debug.LogError($"Player {guid}({displayName}) Try to draw card but it's a worst time.");
                 return;
             }
 
