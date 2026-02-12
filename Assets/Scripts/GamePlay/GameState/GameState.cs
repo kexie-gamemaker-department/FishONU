@@ -10,7 +10,7 @@ namespace FishONU.GamePlay.GameState
         None, // 特殊的状态，对应 null
         Prepare, // 游戏开始的准备阶段
         PlayerTurn, // 玩家阶段
-        AffectedPlayerTurn, // 受功能牌效果影响的玩家回合
+        AffectedTurn, // 受功能牌效果影响的玩家回合
         GameOver, // 游戏结束阶段
     }
 
@@ -20,7 +20,7 @@ namespace FishONU.GamePlay.GameState
         {
             GameStateEnum.None => GameState.None,
             GameStateEnum.Prepare => GameState.Prepare,
-            GameStateEnum.AffectedPlayerTurn => GameState.EffectProcessing,
+            GameStateEnum.AffectedTurn => GameState.AffectedTurn,
             GameStateEnum.GameOver => GameState.GameOver,
             GameStateEnum.PlayerTurn => GameState.PlayerTurn,
             _ => throw new ArgumentOutOfRangeException(nameof(stateEnum), $"无法识别的状态: {stateEnum}"),
@@ -30,7 +30,7 @@ namespace FishONU.GamePlay.GameState
         {
             NoneState => GameStateEnum.None,
             PrepareState => GameStateEnum.Prepare,
-            AffectedPlayerTurn => GameStateEnum.AffectedPlayerTurn,
+            AffectedTurn => GameStateEnum.AffectedTurn,
             PlayerTurnState => GameStateEnum.PlayerTurn, // TODO: 将 switch 判定从 belong to 改成 is
             GameOverState => GameStateEnum.GameOver,
             null => GameStateEnum.None,
@@ -45,7 +45,7 @@ namespace FishONU.GamePlay.GameState
         public static readonly NoneState None = new();
         public static readonly PrepareState Prepare = new();
         public static readonly PlayerTurnState PlayerTurn = new();
-        public static readonly AffectedPlayerTurn EffectProcessing = new();
+        public static readonly AffectedTurn AffectedTurn = new();
         public static readonly GameOverState GameOver = new();
 
 

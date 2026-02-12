@@ -9,6 +9,7 @@ using FishONU.Utils;
 using Mirror;
 using Mirror.Examples.Common.Controllers.Tank;
 using Unity.VisualScripting;
+using UnityEditorInternal;
 using UnityEngine;
 using UnityEngine.SocialPlatforms;
 using Color = FishONU.CardSystem.Color;
@@ -272,16 +273,30 @@ namespace FishONU.GamePlay.GameState
 
             Debug.Log($"Player {playerGuid} plays card {card}");
 
+            EndTurn();
+        }
+
+        [Server]
+        public void EndTurn(bool checkSpecCard = true)
+        {
+            // TODO: 胜利结算逻辑
+
+
             // TODO: 写功能牌
-            // TODO: card effector
-            if (card.face == Face.Skip)
+            // 检查是否有功能牌
+            if (checkSpecCard &&
+                topCardData.face
+                    is Face.Skip
+                    or Face.Reverse
+               )
+            {
+                ChangeState(GameStateEnum.AffectedTurn);
+            }
+            else
             {
                 TurnIndexNext();
-                ChangeState(GameStateEnum.AffectedPlayerTurn);
+                ChangeState(GameStateEnum.PlayerTurn);
             }
-
-            TurnIndexNext();
-            ChangeState(GameStateEnum.PlayerTurn);
         }
 
         [Server]
@@ -290,15 +305,15 @@ namespace FishONU.GamePlay.GameState
             // TODO:
             if (playerGuid == null)
             {
-                Debug.LogError($"DrawCard: guid: {playerGuid}");
+                Debug.LogError($"DrawCard: playerGuid is null");
                 return;
             }
 
             // 抽卡
-            var player = players.Find(p => p.guid == playerGuid);
+            var player = PlayerController.FindPlayerByGuid(playerGuid);
             if (player == null)
             {
-                Debug.Log($"Player {playerGuid} not found");
+                Debug.Log($"Player not found");
                 return;
             }
 
@@ -312,10 +327,9 @@ namespace FishONU.GamePlay.GameState
                 return;
             }
 
-            Debug.Log($"Player {playerGuid} draws card");
+            Debug.Log($"Player {playerGuid}({player.displayName}) draws card");
 
-            TurnIndexNext();
-            ChangeState(GameStateEnum.PlayerTurn);
+            EndTurn(false);
         }
 
 
@@ -372,7 +386,7 @@ namespace FishONU.GamePlay.GameState
         public void TurnIndexNext()
         {
             // set index
-            currentPlayerIndex = (currentPlayerIndex + turnDirection) % players.Count;
+            currentPlayerIndex = (currentPlayerIndex + turnDirection + players.Count) % players.Count;
         }
 
         #endregion
