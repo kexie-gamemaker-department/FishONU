@@ -281,6 +281,9 @@ namespace FishONU.GamePlay.GameState
         {
             // TODO: 胜利结算逻辑
 
+            // 检查是否要洗牌
+            if (drawPileInventory.Cards.Count == 0)
+                ShuffleDrawPile();
 
             // TODO: 写功能牌
             // 检查是否有功能牌
@@ -309,6 +312,12 @@ namespace FishONU.GamePlay.GameState
                 return;
             }
 
+            // 检查是否需要洗牌
+            if (drawPileInventory.Cards.Count == 0)
+            {
+                ShuffleDrawPile();
+            }
+
             // 抽卡
             var player = PlayerController.FindPlayerByGuid(playerGuid);
             if (player == null)
@@ -330,6 +339,19 @@ namespace FishONU.GamePlay.GameState
             Debug.Log($"Player {playerGuid}({player.displayName}) draws card");
 
             EndTurn(false);
+        }
+
+        [Server]
+        public void ShuffleDrawPile()
+        {
+            var cards = discardPileInventory.Cards
+                .Select(c => c)
+                .ToList();
+
+            cards.FisherYatesShuffle();
+
+            discardPileInventory.Cards.Clear();
+            drawPileInventory.Cards.AddRange(cards);
         }
 
 
@@ -377,9 +399,10 @@ namespace FishONU.GamePlay.GameState
             if (ownerInventory == null)
                 return false;
 
-            return ownerInventory.Cards.Count > 0;
-
             // TODO: 自动洗牌
+            if (ownerInventory.Cards.Count == 0) ShuffleDrawPile();
+
+            return ownerInventory.Cards.Count > 0;
         }
 
         [Server]
