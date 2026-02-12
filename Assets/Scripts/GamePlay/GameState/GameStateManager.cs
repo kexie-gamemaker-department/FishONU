@@ -30,6 +30,7 @@ namespace FishONU.GamePlay.GameState
         [SyncVar] public int turnDirection = 1;
         [SyncVar] public int drawPenaltyStack;
         [SyncVar] public CardData topCardData = new CardData();
+        // [SyncVar] public CardData effectingCardData; // 正在生效的功能卡
 
         public GameState LocalState { get; private set; }
 
@@ -271,8 +272,16 @@ namespace FishONU.GamePlay.GameState
 
             Debug.Log($"Player {playerGuid} plays card {card}");
 
-            NextPlayer();
-            // TODO: 先不管功能牌，把 PlayerTurnState 搞好再说
+            // TODO: 写功能牌
+            // TODO: card effector
+            if (card.face == Face.Skip)
+            {
+                TurnIndexNext();
+                ChangeState(GameStateEnum.AffectedPlayerTurn);
+            }
+
+            TurnIndexNext();
+            ChangeState(GameStateEnum.PlayerTurn);
         }
 
         [Server]
@@ -305,7 +314,8 @@ namespace FishONU.GamePlay.GameState
 
             Debug.Log($"Player {playerGuid} draws card");
 
-            NextPlayer();
+            TurnIndexNext();
+            ChangeState(GameStateEnum.PlayerTurn);
         }
 
 
@@ -359,13 +369,10 @@ namespace FishONU.GamePlay.GameState
         }
 
         [Server]
-        public void NextPlayer()
+        public void TurnIndexNext()
         {
             // set index
             currentPlayerIndex = (currentPlayerIndex + turnDirection) % players.Count;
-
-            // set state
-            ChangeState(GameStateEnum.PlayerTurn);
         }
 
         #endregion

@@ -8,6 +8,7 @@ TagManager:
   - DiscardPile
   - GameStateManager
   - Card
+  - GameUI
   layers:
   - Default
   - TransparentFX
