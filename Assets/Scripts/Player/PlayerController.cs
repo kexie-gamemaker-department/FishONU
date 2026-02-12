@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using FishONU.CardSystem;
 using FishONU.CardSystem.CardArrangeStrategy;
 using FishONU.GamePlay.GameState;
@@ -75,6 +77,26 @@ namespace FishONU.Player
             }
         }
 
+        #region Structure
+
+        public static PlayerController FindPlayerByGuid(string guid)
+        {
+            return GameObject
+                .FindGameObjectsWithTag("Player")
+                .Select(go => go.GetComponent<PlayerController>())
+                .First(p => p != null && p.guid == guid);
+        }
+
+        public static IEnumerable<PlayerController> FindPlayersByName(string names)
+        {
+            return GameObject
+                .FindGameObjectsWithTag("Player")
+                .Select(go => go.GetComponent<PlayerController>())
+                .Where(p => p != null && p.displayName == names);
+        }
+
+        #endregion
+
         #region View
 
         public Action<bool, bool> OnTurnViewSwitch;
@@ -95,7 +117,8 @@ namespace FishONU.Player
         {
             if (NetworkClient.localPlayer == null)
             {
-                Debug.Log("Try to ArrangeSeat failed cause local player is null.");
+                // TODO: 这里有一个挺常见的 bug 不过暂时不太影响
+                Debug.LogWarning("Try to ArrangeSeat failed cause local player is null.");
                 return;
             }
 

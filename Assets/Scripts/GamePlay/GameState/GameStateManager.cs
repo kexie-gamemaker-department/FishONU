@@ -18,13 +18,15 @@ namespace FishONU.GamePlay.GameState
     public class GameStateManager : NetworkBehaviour
     {
         [SyncVar(hook = nameof(OnStateChange))]
-        private GameStateEnum CurrentStateEnum = GameStateEnum.None;
+        private GameStateEnum syncStateEnum = GameStateEnum.None;
+
+        private readonly SyncList<string> syncPlayersList = new();
 
 
         // TODO: 早晚得和 PlayerController 的座位合并一下
-        [SyncVar] public int currentPlayerIndex = 0;
+        [SyncVar] public int currentPlayerIndex;
         [SyncVar] public int turnDirection = 1;
-        [SyncVar] public int drawPenaltyStack = 0;
+        [SyncVar] public int drawPenaltyStack;
         [SyncVar] public CardData topCardData = new CardData();
 
         public GameState LocalState { get; private set; }
@@ -93,6 +95,23 @@ namespace FishONU.GamePlay.GameState
 
         #region Network
 
+        public override void OnStartClient()
+        {
+            base.OnStartClient();
+
+            if (isClientOnly)
+                syncPlayersList.OnChange += OnPlayersListChange;
+        }
+
+        public override void OnStopClient()
+        {
+            base.OnStopClient();
+
+            if (isClientOnly)
+                syncPlayersList.OnChange -= OnPlayersListChange;
+        }
+
+
         [Server]
         public void StartGame()
         {
@@ -119,6 +138,7 @@ namespace FishONU.GamePlay.GameState
                 .Where(p => p != null)
                 .ToArray();
             players.AddRange(currentPlayers);
+            syncPlayersList.AddRange(currentPlayers.Select(p => p.guid));
 
 
             ChangeState(GameStateEnum.Prepare);
@@ -137,7 +157,7 @@ namespace FishONU.GamePlay.GameState
             OnStateEnumChange?.Invoke(oldStateEnum, stateEnum);
 
             if (isServer)
-                CurrentStateEnum = stateEnum;
+                syncStateEnum = stateEnum;
         }
 
         [Client]
@@ -145,6 +165,52 @@ namespace FishONU.GamePlay.GameState
         {
             if (isServer) return;
             ChangeState(newValue);
+        }
+
+        [Client]
+        private void OnPlayersListChange(SyncList<string>.Operation op, int index, string value)
+        {
+            PlayerController p;
+            switch (op)
+            {
+                case SyncList<string>.Operation.OP_ADD:
+                    Debug.Log($"Player {value} joined");
+                    p = PlayerController.FindPlayerByGuid(value);
+                    if (p == null)
+                    {
+                        Debug.LogError($"Player {value} not found");
+                        return;
+                    }
+
+                    players.Add(p);
+                    break;
+
+                case SyncList<string>.Operation.OP_CLEAR:
+                    Debug.Log("Players list cleared");
+                    players.Clear();
+                    break;
+
+                case SyncList<string>.Operation.OP_SET:
+                    Debug.Log($"Player {value} set at {index}");
+                    p = PlayerController.FindPlayerByGuid(value);
+                    if (p == null)
+                    {
+                        Debug.LogError($"Player {value} not found");
+                        return;
+                    }
+
+                    players[index] = p;
+                    break;
+
+                case SyncList<string>.Operation.OP_REMOVEAT:
+                    Debug.Log($"Player {value} removed at {index}");
+                    players.RemoveAt(index);
+                    break;
+
+                default:
+                    Debug.LogError($"Unknown operation {op}");
+                    break;
+            }
         }
 
         #endregion
