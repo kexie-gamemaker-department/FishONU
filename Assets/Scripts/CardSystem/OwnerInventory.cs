@@ -181,8 +181,6 @@ namespace FishONU.CardSystem
         {
             if (cardData == null) return;
 
-            Debug.Log("ResetHighlightCard");
-
             var index = LocalCards.FindIndex(c => c.guid == cardData.guid);
             if (index == -1) return;
             if (!localCardObjs.TryGetValue(cardData.guid, out var obj))
@@ -205,8 +203,6 @@ namespace FishONU.CardSystem
         private void SetHighlightCardView(CardData cardData)
         {
             if (cardData == null) return;
-
-            Debug.Log($"SetHighlightCard: {cardData.guid}");
 
             // highlight new card
             var index = LocalCards.FindIndex(c => c.guid == cardData.guid);
