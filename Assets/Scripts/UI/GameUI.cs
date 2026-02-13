@@ -1,5 +1,6 @@
 ﻿using FishONU.GamePlay.GameState;
 using FishONU.Player;
+using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -8,8 +9,13 @@ namespace FishONU.UI
 {
     public class GameUI : MonoBehaviour
     {
+        [Header("玩家操作")]
         [SerializeField] private Button submitCardButton;
         [SerializeField] private Button drawCardButton;
+        // WARNING: 变色按钮用的是 Unity Event，所以得去 Button 的 Inspector 里面找到 Bind
+        [SerializeField] private GameObject secondColorPalette;
+
+        [Header("信息显示")]
         [SerializeField] private TextMeshProUGUI currentTurnText;
         [SerializeField] public GameStateManager gm;
 
@@ -31,6 +37,8 @@ namespace FishONU.UI
             if (drawCardButton == null) Debug.LogError("DrawCardButton is null");
             else drawCardButton.onClick.AddListener(OnDrawCardButtonClick);
 
+            if (secondColorPalette == null) Debug.LogError("SecondColorPalette is null");
+
             if (currentTurnText == null) Debug.LogError("CurrentTurnText is null");
             else currentTurnText.text = "";
 
@@ -38,6 +46,7 @@ namespace FishONU.UI
             else
             {
                 gm.OnCurrentPlayerIndexChangeAction += OnCurrentPlayerChange;
+                gm.OnStateEnumChangeAction += OnGameStateEnumChange;
             }
         }
 
@@ -47,6 +56,7 @@ namespace FishONU.UI
             if (gm != null)
             {
                 gm.OnCurrentPlayerIndexChangeAction -= OnCurrentPlayerChange;
+                gm.OnStateEnumChangeAction -= OnGameStateEnumChange;
             }
         }
 
@@ -82,7 +92,28 @@ namespace FishONU.UI
         #region View
 
         private bool isTurn;
+        private bool isShowSecondColorPalette;
         private string currentPlayerDisplayName;
+
+        public void SelectSecondColor(string colorString)
+        {
+
+            if (player == null)
+            {
+                Debug.LogError("PlayerController is null");
+                return;
+            }
+
+            if (Enum.TryParse(colorString, out CardSystem.Color color))
+            {
+                player.TrySetWildColor(color);
+            }
+            else
+            {
+                Debug.LogError($"Color {colorString} is not valid");
+                return;
+            }
+        }
 
         private void RefreshView()
         {
@@ -90,6 +121,8 @@ namespace FishONU.UI
             drawCardButton.interactable = isTurn;
 
             currentTurnText.text = currentPlayerDisplayName != null ? $"当前回合: {currentPlayerDisplayName}" : "";
+
+            secondColorPalette.SetActive(isShowSecondColorPalette);
         }
 
         private void OnSubmitCardButtonClick()
@@ -114,9 +147,11 @@ namespace FishONU.UI
             player.TryDrawCard();
         }
 
+
+
         #endregion
 
-        #region Out Delegate Handler
+        #region Outer Delegate Handler
 
         private void OnTurnSwitch(bool oldValue, bool newValue)
         {
@@ -135,6 +170,21 @@ namespace FishONU.UI
             }
 
             currentPlayerDisplayName = p.displayName;
+            RefreshView();
+        }
+
+        private void OnGameStateEnumChange(GameStateEnum oldValue, GameStateEnum newValue)
+        {
+            if (newValue == GameStateEnum.WaitingForColor &&
+                player.guid == gm.GetCurrentPlayer().guid)
+            {
+                isShowSecondColorPalette = true;
+            }
+            else
+            {
+                isShowSecondColorPalette = false;
+            }
+
             RefreshView();
         }
 

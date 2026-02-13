@@ -335,6 +335,30 @@ namespace FishONU.Player
             gm.DrawCard(guid);
         }
 
+        [Client]
+        public void TrySetWildColor(CardSystem.Color color)
+        {
+            CmdSetWildColor(color);
+        }
+
+        [Command]
+        public void CmdSetWildColor(CardSystem.Color color)
+        {
+            if (!gm.CanPlayerAction(guid))
+            {
+                Debug.LogWarning($"Player {guid}({displayName}) Try to set wild color when it's not player's turn");
+                return;
+            }
+
+            if (!gm.CanCardDye(color))
+            {
+                Debug.LogWarning($"Player {guid}({displayName}) Try to set wild color to a invalid color {color.ToString()}");
+                return;
+            }
+
+            gm.SetWildColor(color);
+        }
+
 
         [Server]
         private void ValidateAndPlayCard(CardData card)

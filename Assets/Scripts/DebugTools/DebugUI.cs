@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using FishONU.CardSystem;
 using FishONU.GamePlay.GameState;
+using FishONU.Player;
 using Mirror;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -110,6 +112,17 @@ namespace FishONU.DebugTools
 
             DebugBtn<OwnerInventory>("Command Add Reverse Card", inv => inv.DebugCmdAddReverseCard());
             DebugBtn<OwnerInventory>("Command Add Skip Card", inv => inv.DebugCmdAddSkipCard());
+
+            if (GUILayout.Button("Command Add all +4 and +2 card", GUILayout.Width(250)))
+            {
+                var players = GameObject.FindObjectsOfType<PlayerController>();
+
+                foreach (var player in players)
+                {
+                    player.ownerInventory.Cards.Add(new CardData(CardSystem.Color.Black, Face.WildDrawFour));
+                    player.ownerInventory.Cards.Add(new CardData(CardSystem.Color.Red, Face.DrawTwo));
+                }
+            }
 
             DebugBtn<OwnerInventory>("Command Add DrawPile Card", inv => inv.DebugCmdAddCard(), "DrawPile");
             DebugBtn<OwnerInventory>("Command Add DrawPile Card", inv => inv.DebugCmdRemoveCard(), "DrawPile");

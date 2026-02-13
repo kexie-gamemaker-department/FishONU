@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using FishONU.CardSystem;
+﻿using FishONU.CardSystem;
 using FishONU.Player;
 using FishONU.Utils;
 using Mirror;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using Color = FishONU.CardSystem.Color;
 
@@ -169,12 +170,22 @@ namespace FishONU.GamePlay.GameState
 
             LocalState = stateEnum.GetState();
 
+            var state0 = syncStateEnum;
+
             LocalState.Enter(this);
 
-            OnStateEnumChangeAction?.Invoke(oldStateEnum, stateEnum);
+            // Enter State 可以被允许在进入时切换状态
+            if (state0 != syncStateEnum)
+            {
+                return;
+            }
 
             if (isServer)
                 syncStateEnum = stateEnum;
+
+            // host 下不会触发 SyncVar hook，所以得放在这里
+            if (isClient)
+                OnStateEnumChangeAction?.Invoke(oldStateEnum, stateEnum);
         }
 
         [Client]
@@ -296,21 +307,19 @@ namespace FishONU.GamePlay.GameState
             int countToDraw = Math.Max(drawPenaltyStack, 1);
             for (int i = 0; i < countToDraw; i++)
             {
+                if (drawPileInventory.Cards.Count == 0)
+                {
+                    ShuffleDrawPile();
+                }
+
                 if (drawPileInventory.Cards.TryPop(out var card))
                 {
                     player.AddCard(card);
                 }
                 else
                 {
-                    // 牌不够就洗牌
-                    ShuffleDrawPile();
-                    if (drawPileInventory.Cards.TryPop(out var card2))
-                        player.AddCard(card2);
-                    else
-                    {
-                        Debug.LogError($"drawPileInventory.Cards.TryPop() is null");
-                        return;
-                    }
+                    Debug.LogError($"drawPileInventory.Cards.TryPop() is null");
+                    return;
                 }
             }
 
@@ -333,6 +342,22 @@ namespace FishONU.GamePlay.GameState
 
             discardPileInventory.Cards.Clear();
             drawPileInventory.Cards.AddRange(cards);
+        }
+
+        [Server]
+        public void TurnIndexNext()
+        {
+            // set index
+            currentPlayerIndex = (currentPlayerIndex + turnDirection + players.Count) % players.Count;
+        }
+
+        [Server]
+        public void SetWildColor(Color color)
+        {
+            topCardData.secondColor = color;
+
+            TurnIndexNext();
+            ChangeState(GameStateEnum.PlayerTurn);
         }
 
         [Server]
@@ -362,8 +387,19 @@ namespace FishONU.GamePlay.GameState
             // 如果有罚牌堆叠正在进行
             if (drawPenaltyStack > 0)
             {
-                return card.face == Face.DrawTwo ||
-                    card.face == Face.WildDrawFour;
+                var topFace = topCardData.face;
+
+                switch (topFace)
+                {
+                    case Face.DrawTwo:
+                        // +2 -> +2/+4
+                        return card.face == Face.DrawTwo || card.face == Face.WildDrawFour;
+                    case Face.WildDrawFour:
+                        // +4 -> +4
+                        return card.face == Face.WildDrawFour;
+                }
+
+                return false;
             }
 
             if (card.color == Color.Black) // 黑牌肯定能打出
@@ -375,6 +411,16 @@ namespace FishONU.GamePlay.GameState
                 return true;
 
             return false;
+        }
+
+        [Server]
+        public bool CanCardDye(Color color)
+        {
+            if (syncStateEnum != GameStateEnum.WaitingForColor) return false;
+
+            if (color == Color.Black) return false;
+
+            return true;
         }
 
         [Server]
@@ -392,12 +438,7 @@ namespace FishONU.GamePlay.GameState
             return ownerInventory.Cards.Count > 0;
         }
 
-        [Server]
-        public void TurnIndexNext()
-        {
-            // set index
-            currentPlayerIndex = (currentPlayerIndex + turnDirection + players.Count) % players.Count;
-        }
+
 
         #endregion
     }

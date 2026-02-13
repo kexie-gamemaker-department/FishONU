@@ -11,6 +11,7 @@ namespace FishONU.GamePlay.GameState
         Prepare, // 游戏开始的准备阶段
         PlayerTurn, // 玩家阶段
         AffectedTurn, // 受功能牌效果影响的玩家回合
+        WaitingForColor, // 变色牌等待玩家选择颜色
         GameOver, // 游戏结束阶段
     }
 
@@ -21,6 +22,7 @@ namespace FishONU.GamePlay.GameState
             GameStateEnum.None => GameState.None,
             GameStateEnum.Prepare => GameState.Prepare,
             GameStateEnum.AffectedTurn => GameState.AffectedTurn,
+            GameStateEnum.WaitingForColor => GameState.WaitingForColor,
             GameStateEnum.GameOver => GameState.GameOver,
             GameStateEnum.PlayerTurn => GameState.PlayerTurn,
             _ => throw new ArgumentOutOfRangeException(nameof(stateEnum), $"无法识别的状态: {stateEnum}"),
@@ -32,6 +34,7 @@ namespace FishONU.GamePlay.GameState
             PrepareState => GameStateEnum.Prepare,
             AffectedTurn => GameStateEnum.AffectedTurn,
             PlayerTurnState => GameStateEnum.PlayerTurn, // TODO: 将 switch 判定从 belong to 改成 is
+            WaitingForColor => GameStateEnum.WaitingForColor,
             GameOverState => GameStateEnum.GameOver,
             null => GameStateEnum.None,
             _ => throw new ArgumentOutOfRangeException(nameof(gameState), $"无法识别的状态类: {nameof(gameState)}"),
@@ -47,6 +50,7 @@ namespace FishONU.GamePlay.GameState
         public static readonly PlayerTurnState PlayerTurn = new();
         public static readonly AffectedTurn AffectedTurn = new();
         public static readonly GameOverState GameOver = new();
+        public static readonly WaitingForColor WaitingForColor = new();
 
 
         public virtual void Enter(GameStateManager manager)
