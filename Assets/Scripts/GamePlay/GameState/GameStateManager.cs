@@ -25,7 +25,7 @@ namespace FishONU.GamePlay.GameState
         [SyncVar] public int turnDirection = 1;
         [SyncVar] public int drawPenaltyStack;
         [SyncVar] public CardData topCardData = new CardData();
-        // [SyncVar] public CardData effectingCardData; // 正在生效的功能卡
+        [SyncVar] public CardData effectingCardData; // 正在生效的功能卡
 
         public GameState LocalState { get; private set; }
 
@@ -263,42 +263,16 @@ namespace FishONU.GamePlay.GameState
             discardPileInventory.Cards.Add(card);
 
             topCardData = card;
+            effectingCardData = card;
 
             Debug.Log($"Player {playerGuid} plays card {card}");
 
-            EndTurn();
-        }
-
-        [Server]
-        public void EndTurn(bool checkSpecCard = true)
-        {
-            // TODO: 胜利结算逻辑
-
-            // 检查是否要洗牌
-            if (drawPileInventory.Cards.Count == 0)
-                ShuffleDrawPile();
-
-            // TODO: 写功能牌
-            // 检查是否有功能牌
-            if (checkSpecCard &&
-                topCardData.face
-                    is Face.Skip
-                    or Face.Reverse
-               )
-            {
-                ChangeState(GameStateEnum.AffectedTurn);
-            }
-            else
-            {
-                TurnIndexNext();
-                ChangeState(GameStateEnum.PlayerTurn);
-            }
+            ChangeState(GameStateEnum.AffectedTurn);
         }
 
         [Server]
         public void DrawCard(string playerGuid)
         {
-            // TODO:
             if (playerGuid == null)
             {
                 Debug.LogError($"DrawCard: playerGuid is null");
@@ -331,7 +305,7 @@ namespace FishONU.GamePlay.GameState
 
             Debug.Log($"Player {playerGuid}({player.displayName}) draws card");
 
-            EndTurn(false);
+            ChangeState(GameStateEnum.AffectedTurn);
         }
 
         [Server]
@@ -346,7 +320,6 @@ namespace FishONU.GamePlay.GameState
             discardPileInventory.Cards.Clear();
             drawPileInventory.Cards.AddRange(cards);
         }
-
 
         [Server]
         public bool CanPlayerAction(string playerGuid)
