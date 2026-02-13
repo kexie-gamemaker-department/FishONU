@@ -79,7 +79,9 @@ namespace FishONU.GamePlay.GameState
             {
                 if (drawPileOwnerInventory.Cards.TryPop(out firstCard))
                 {
-                    if (firstCard.face == Face.WildDrawFour || firstCard.color == Color.Black)
+                    if (firstCard.face == Face.WildDrawFour ||
+                        firstCard.face == Face.Wild ||
+                        firstCard.color == Color.Black)
                     {
                         drawPileOwnerInventory.Cards.InsertRandom(firstCard);
                         continue;
