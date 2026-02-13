@@ -35,6 +35,9 @@ namespace FishONU.GamePlay.GameState
                 case Face.Reverse:
                     ProcessReverse(manager);
                     break;
+                case Face.DrawTwo:
+                    ProcessDrawTwo(manager);
+                    break;
                 default:
                     // 普通牌的默认效果是进入下一回合
                     manager.TurnIndexNext();
@@ -47,13 +50,14 @@ namespace FishONU.GamePlay.GameState
 
         private void ProcessSkip(GameStateManager manager)
         {
+            manager.effectingCardData = null; // 消费令牌
+
             // 下一个玩家
             manager.TurnIndexNext();
 
             // 限定玩家只能抽牌过
             var p = manager.GetCurrentPlayer();
 
-            manager.effectingCardData = null;
             //manager.DrawCard(p.guid); // jb 写了半天发现记错规则了
 
             manager.TurnIndexNext();
@@ -62,6 +66,8 @@ namespace FishONU.GamePlay.GameState
 
         private void ProcessReverse(GameStateManager manager)
         {
+            manager.effectingCardData = null;
+
             // 反转出牌顺序
             switch (manager.turnDirection)
             {
@@ -73,7 +79,6 @@ namespace FishONU.GamePlay.GameState
                     break;
             }
 
-            manager.effectingCardData = null;
 
             manager.TurnIndexNext();
             manager.ChangeState(GameStateEnum.PlayerTurn);
@@ -82,8 +87,11 @@ namespace FishONU.GamePlay.GameState
         private void ProcessDrawTwo(GameStateManager manager)
         {
             // 下一个玩家要么打 +2 要么 +4 或者选择抽牌清空抽牌堆叠
+            manager.effectingCardData = null;
+
             manager.drawPenaltyStack += 2;
 
+            manager.TurnIndexNext();
             manager.ChangeState(GameStateEnum.PlayerTurn);
         }
 

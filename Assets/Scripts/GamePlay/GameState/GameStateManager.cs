@@ -293,19 +293,33 @@ namespace FishONU.GamePlay.GameState
                 return;
             }
 
-            if (drawPileInventory.Cards.TryPop(out var card))
+            int countToDraw = Math.Max(drawPenaltyStack, 1);
+            for (int i = 0; i < countToDraw; i++)
             {
-                player.AddCard(card);
+                if (drawPileInventory.Cards.TryPop(out var card))
+                {
+                    player.AddCard(card);
+                }
+                else
+                {
+                    // 牌不够就洗牌
+                    ShuffleDrawPile();
+                    if (drawPileInventory.Cards.TryPop(out var card2))
+                        player.AddCard(card2);
+                    else
+                    {
+                        Debug.LogError($"drawPileInventory.Cards.TryPop() is null");
+                        return;
+                    }
+                }
             }
-            else
-            {
-                Debug.LogError($"drawPileInventory.Cards.TryPop() is null");
-                return;
-            }
+
+            drawPenaltyStack = 0;
 
             Debug.Log($"Player {playerGuid}({player.displayName}) draws card");
 
-            ChangeState(GameStateEnum.AffectedTurn);
+            TurnIndexNext();
+            ChangeState(GameStateEnum.PlayerTurn);
         }
 
         [Server]
@@ -343,6 +357,13 @@ namespace FishONU.GamePlay.GameState
             {
                 Debug.LogError($"CanPlayCard: card is null");
                 return false;
+            }
+
+            // 如果有罚牌堆叠正在进行
+            if (drawPenaltyStack > 0)
+            {
+                return card.face == Face.DrawTwo ||
+                    card.face == Face.WildDrawFour;
             }
 
             if (card.color == Color.Black) // 黑牌肯定能打出
