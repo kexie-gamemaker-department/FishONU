@@ -14,6 +14,8 @@ namespace FishONU.GamePlay.GameState
         {
             base.OnServerEnter(manager);
 
+            Debug.Log($"AffectedTurn: {manager.effectingCardData.color} {manager.effectingCardData.face}");
+
             // 重设所有玩家的 turn 状态
             foreach (var player in manager.players)
             {
@@ -37,6 +39,9 @@ namespace FishONU.GamePlay.GameState
                     break;
                 case Face.DrawTwo:
                     ProcessDrawTwo(manager);
+                    break;
+                case Face.Wild:
+                    ProcessWild(manager);
                     break;
                 default:
                     // 普通牌的默认效果是进入下一回合
@@ -93,6 +98,13 @@ namespace FishONU.GamePlay.GameState
 
             manager.TurnIndexNext();
             manager.ChangeState(GameStateEnum.PlayerTurn);
+        }
+
+        private void ProcessWild(GameStateManager manager)
+        {
+            manager.effectingCardData = null;
+
+            manager.ChangeState(GameStateEnum.WaitingForColor);
         }
 
         #endregion

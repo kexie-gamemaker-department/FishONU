@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using FishONU.CardSystem;
+﻿using FishONU.CardSystem;
 using FishONU.Player;
 using FishONU.Utils;
 using Mirror;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using Unity.Collections.LowLevel.Unsafe;
 using UnityEngine;
 using Color = FishONU.CardSystem.Color;
 
@@ -169,12 +170,22 @@ namespace FishONU.GamePlay.GameState
 
             LocalState = stateEnum.GetState();
 
+            var state0 = syncStateEnum;
+
             LocalState.Enter(this);
 
-            OnStateEnumChangeAction?.Invoke(oldStateEnum, stateEnum);
+            // Enter State 可以被允许在进入时切换状态
+            if (state0 != syncStateEnum)
+            {
+                return;
+            }
 
             if (isServer)
                 syncStateEnum = stateEnum;
+
+            // host 下不会触发 SyncVar hook，所以得放在这里
+            if (isClient)
+                OnStateEnumChangeAction?.Invoke(oldStateEnum, stateEnum);
         }
 
         [Client]
@@ -336,6 +347,22 @@ namespace FishONU.GamePlay.GameState
         }
 
         [Server]
+        public void TurnIndexNext()
+        {
+            // set index
+            currentPlayerIndex = (currentPlayerIndex + turnDirection + players.Count) % players.Count;
+        }
+
+        [Server]
+        public void SetWildColor(Color color)
+        {
+            topCardData.secondColor = color;
+
+            TurnIndexNext();
+            ChangeState(GameStateEnum.PlayerTurn);
+        }
+
+        [Server]
         public bool CanPlayerAction(string playerGuid)
         {
             if (playerGuid == null)
@@ -378,6 +405,16 @@ namespace FishONU.GamePlay.GameState
         }
 
         [Server]
+        public bool CanCardDye(Color color)
+        {
+            if (syncStateEnum != GameStateEnum.WaitingForColor) return false;
+
+            if (color == Color.Black) return false;
+
+            return true;
+        }
+
+        [Server]
         public bool CanDrawCard()
         {
             // 抽牌堆还有牌
@@ -392,12 +429,7 @@ namespace FishONU.GamePlay.GameState
             return ownerInventory.Cards.Count > 0;
         }
 
-        [Server]
-        public void TurnIndexNext()
-        {
-            // set index
-            currentPlayerIndex = (currentPlayerIndex + turnDirection + players.Count) % players.Count;
-        }
+
 
         #endregion
     }

@@ -315,7 +315,7 @@ GameObject:
   - component: {fileID: 113569571}
   - component: {fileID: 113569570}
   m_Layer: 5
-  m_Name: SecondColorYellow
+  m_Name: SecondColorYellowButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -338,7 +338,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -477, y: -95}
+  m_AnchoredPosition: {x: -64, y: 1}
   m_SizeDelta: {x: 128.47, y: 51.04}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &113569570
@@ -384,7 +384,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 113569571}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1781530376}
+        m_TargetAssemblyTypeName: FishONU.UI.GameUI, Assembly-CSharp
+        m_MethodName: SelectSecondColor
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: Yellow
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &113569571
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -471,7 +483,7 @@ GameObject:
   - component: {fileID: 231886669}
   - component: {fileID: 231886668}
   m_Layer: 5
-  m_Name: SecondColorBlue
+  m_Name: SecondColorBlueButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -494,7 +506,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -347.53998, y: -95.003}
+  m_AnchoredPosition: {x: 65.46002, y: 0.99700165}
   m_SizeDelta: {x: 130.45, y: 51.045}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &231886668
@@ -540,7 +552,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 231886669}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1781530376}
+        m_TargetAssemblyTypeName: FishONU.UI.GameUI, Assembly-CSharp
+        m_MethodName: SelectSecondColor
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: Blue
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &231886669
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1300,7 +1324,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -1406, y: -600}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &879658184
 GameObject:
@@ -2356,7 +2380,7 @@ GameObject:
   - component: {fileID: 1446295423}
   - component: {fileID: 1446295422}
   m_Layer: 5
-  m_Name: SecondColorGreen
+  m_Name: SecondColorGreenButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2379,7 +2403,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -411.65997, y: -146.05}
+  m_AnchoredPosition: {x: 1.3400286, y: -50.050003}
   m_SizeDelta: {x: 130.45, y: 51.045}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1446295422
@@ -2425,7 +2449,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1446295423}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1781530376}
+        m_TargetAssemblyTypeName: FishONU.UI.GameUI, Assembly-CSharp
+        m_MethodName: SelectSecondColor
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: Green
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1446295423
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2782,7 +2818,7 @@ Canvas:
   serializedVersion: 3
   m_RenderMode: 1
   m_Camera: {fileID: 519420031}
-  m_PlaneDistance: 100
+  m_PlaneDistance: 10
   m_PixelPerfect: 0
   m_ReceivesEvents: 1
   m_OverrideSorting: 0
@@ -2955,7 +2991,7 @@ GameObject:
   - component: {fileID: 1721894400}
   - component: {fileID: 1721894399}
   m_Layer: 5
-  m_Name: SecondColorRed
+  m_Name: SecondColorRedButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2978,7 +3014,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -411.65997, y: -43.957}
+  m_AnchoredPosition: {x: 1.3400286, y: 52.043}
   m_SizeDelta: {x: 130.45, y: 51.045}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1721894399
@@ -3024,7 +3060,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1721894400}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1781530376}
+        m_TargetAssemblyTypeName: FishONU.UI.GameUI, Assembly-CSharp
+        m_MethodName: SelectSecondColor
+        m_Mode: 5
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: Red
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1721894400
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3173,7 +3221,7 @@ RectTransform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1781530373}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: -1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3246,6 +3294,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   submitCardButton: {fileID: 277327926}
   drawCardButton: {fileID: 1417563721}
+  secondColorPalette: {fileID: 754875544}
   currentTurnText: {fileID: 1925173517}
   gm: {fileID: 5377062}
 --- !u!1 &1883210039
