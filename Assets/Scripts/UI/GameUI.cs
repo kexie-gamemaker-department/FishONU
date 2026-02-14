@@ -23,6 +23,10 @@ namespace FishONU.UI
         public ReadOnlyReactiveProperty<List<string>> GameRankName { get; }
         public ReadOnlyReactiveProperty<int> TablePlayerCount { get; }
 
+        public ReadOnlyReactiveProperty<string[]> SeatNames { get; }
+
+        public ReadOnlyReactiveProperty<FishONU.CardSystem.Color> CurrentGameColor { get; }
+
         public GameViewModel(GameStateManager gm, PlayerController pl, TableManager tm)
         {
             StateEnum = Observable.EveryValueChanged(gm, x => x.syncStateEnum)
@@ -58,6 +62,32 @@ namespace FishONU.UI
             TablePlayerCount = tm.OnSeatChangeAsObservable()
                 .Where(_ => NetworkServer.active)
                 .ToReadOnlyReactiveProperty(0);
+
+            SeatNames = Observable.Interval(TimeSpan.FromSeconds(0.5)) // TODO: 暴力解，后面改
+                    .AsUnitObservable()
+                    .Merge(Observable.Timer(TimeSpan.FromSeconds(1)).AsUnitObservable())
+                    .Select(_ =>
+                    {
+                        if (gm.syncStateEnum is not (GameStateEnum.None or GameStateEnum.GameOver)) return new string[4] { "", "", "", "" };
+
+                        string[] names = new string[4] { "", "", "", "" };
+                        var allPlayers = GameObject.FindGameObjectsWithTag("Player")
+                            .Select(go => go.GetComponent<PlayerController>())
+                            .Where(p => p != null);
+
+                        foreach (var p in allPlayers)
+                        {
+                            // 计算该玩家相对于本地玩家的视觉位置
+                            int localIndex = SeatHelper.CalcLocalSeatIndex(pl.seatIndex, p.seatIndex);
+
+                            if (localIndex >= 0 && localIndex < 4)
+                            {
+                                names[localIndex] = p.displayName;
+                            }
+                        }
+                        return names;
+                    })
+                    .ToReadOnlyReactiveProperty(new string[4] { "", "", "", "" });
         }
     }
 
@@ -79,6 +109,8 @@ namespace FishONU.UI
         [Header("信息显示")]
         [SerializeField] private TextMeshProUGUI currentPlayerText;
         [SerializeField] private TextMeshProUGUI gameRank;
+
+        [SerializeField] private TextMeshProUGUI[] seatNameTexts;
 
         [Header("数据")]
         [SerializeField] private GameStateManager gm;
@@ -243,6 +275,19 @@ namespace FishONU.UI
                 )
                 .AddTo(ref d);
 
+            // 绑定座位名字显示
+            _viewModel.SeatNames
+                .Subscribe(names =>
+                {
+                    for (int i = 0; i < seatNameTexts.Length; i++)
+                    {
+                        if (i < names.Length)
+                        {
+                            seatNameTexts[i].text = names[i];
+                        }
+                    }
+                })
+                .AddTo(ref d);
             #endregion
 
             d.RegisterTo(destroyCancellationToken);

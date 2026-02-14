@@ -3,6 +3,7 @@ using FishONU.CardSystem.CardArrangeStrategy;
 using FishONU.GamePlay.GameState;
 using FishONU.UI;
 using Mirror;
+using R3;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,7 +22,7 @@ namespace FishONU.Player
 
         [SyncVar] public string guid;
 
-        [SyncVar] public string displayName;
+        [SyncVar(hook = nameof(OnDisplayNameChanged))] public string displayName;
 
         private GameStateManager gm;
 
@@ -263,7 +264,20 @@ namespace FishONU.Player
         private void CmdUpdatePlayerName(string playerName)
         {
             Debug.Log($"Player {guid}({playerName} change display name to {playerName}");
+
+            var oldName = displayName;
             displayName = playerName;
+
+            if (isHost)
+            {
+                OnDisplayNameChanged(oldName, playerName);
+            }
+        }
+
+        [Client]
+        public void OnDisplayNameChanged(string oldValue, string newValue)
+        {
+            _nameChangeSubject.OnNext(newValue);
         }
 
         #endregion Network
@@ -412,5 +426,12 @@ namespace FishONU.Player
         }
 
         #endregion GamePlay
+
+        #region Observable
+
+        private readonly Subject<string> _nameChangeSubject = new();
+        public Observable<string> OnNameChangeAsObservable() => _nameChangeSubject;
+
+        #endregion
     }
 }
