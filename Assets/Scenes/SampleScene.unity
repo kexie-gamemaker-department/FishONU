@@ -3431,7 +3431,11 @@ MonoBehaviour:
   submitCardButton: {fileID: 277327926}
   drawCardButton: {fileID: 1417563721}
   secondColorPalette: {fileID: 754875544}
-  currentTurnText: {fileID: 1925173517}
+  secondColorChooseRedButton: {fileID: 1721894399}
+  secondColorChooseBlueButton: {fileID: 231886668}
+  secondColorChooseGreenButton: {fileID: 1446295422}
+  secondColorChooseYellowButton: {fileID: 113569570}
+  currentPlayerText: {fileID: 1925173517}
   gameRank: {fileID: 442311159}
   gm: {fileID: 5377062}
 --- !u!1 &1883210039

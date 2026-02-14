@@ -13,7 +13,7 @@ namespace FishONU.GamePlay.GameState
     public class GameStateManager : NetworkBehaviour
     {
         [SyncVar(hook = nameof(OnStateChange))]
-        private GameStateEnum syncStateEnum = GameStateEnum.None;
+        public GameStateEnum syncStateEnum = GameStateEnum.None;
 
         private readonly SyncList<string> syncPlayersList = new();
 
