@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 1960045632163420649}
   - component: {fileID: 3662558387864388539}
   - component: {fileID: 6747439626444899739}
-  - component: {fileID: 3407510541793960833}
+  - component: {fileID: 6391155090301433253}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -53,7 +53,7 @@ MonoBehaviour:
   sendRate: 60
   unreliableBaselineRate: 1
   unreliableRedundancy: 0
-  transport: {fileID: 3407510541793960833}
+  transport: {fileID: 0}
   networkAddress: localhost
   maxConnections: 100
   disconnectInactiveConnections: 0
@@ -98,7 +98,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   offsetX: 0
   offsetY: 0
---- !u!114 &3407510541793960833
+--- !u!114 &6391155090301433253
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
