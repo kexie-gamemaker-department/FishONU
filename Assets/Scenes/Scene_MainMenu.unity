@@ -507,15 +507,15 @@ PrefabInstance:
     m_Modifications:
     - target: {fileID: 1960045632163420649, guid: 929b13f5c695e1b45b5edd39695ec655, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 0.45482698
       objectReference: {fileID: 0}
     - target: {fileID: 1960045632163420649, guid: 929b13f5c695e1b45b5edd39695ec655, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 0.08606233
       objectReference: {fileID: 0}
     - target: {fileID: 1960045632163420649, guid: 929b13f5c695e1b45b5edd39695ec655, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 223.17236
       objectReference: {fileID: 0}
     - target: {fileID: 1960045632163420649, guid: 929b13f5c695e1b45b5edd39695ec655, type: 3}
       propertyPath: m_LocalRotation.w
@@ -545,6 +545,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3407510541793960833, guid: 929b13f5c695e1b45b5edd39695ec655, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3662558387864388539, guid: 929b13f5c695e1b45b5edd39695ec655, type: 3}
+      propertyPath: transport
+      value: 
+      objectReference: {fileID: 0}
     - target: {fileID: 3662558387864388539, guid: 929b13f5c695e1b45b5edd39695ec655, type: 3}
       propertyPath: onlineScene
       value: Assets/Scenes/Scene_Game.unity
@@ -552,6 +560,10 @@ PrefabInstance:
     - target: {fileID: 3662558387864388539, guid: 929b13f5c695e1b45b5edd39695ec655, type: 3}
       propertyPath: offlineScene
       value: Assets/Scenes/Scene_MainMenu.unity
+      objectReference: {fileID: 0}
+    - target: {fileID: 6697485732871251193, guid: 929b13f5c695e1b45b5edd39695ec655, type: 3}
+      propertyPath: m_Enabled
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6747439626444899739, guid: 929b13f5c695e1b45b5edd39695ec655, type: 3}
       propertyPath: m_Enabled
@@ -1900,6 +1912,7 @@ MonoBehaviour:
   hostButton: {fileID: 695074115}
   errorText: {fileID: 216847495}
   manager: {fileID: 2046783824}
+  portTransport: {fileID: 0}
 --- !u!1 &1583132859
 GameObject:
   m_ObjectHideFlags: 0

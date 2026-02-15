@@ -1,5 +1,8 @@
 ﻿using FishONU.Network;
 using FishONU.Player;
+using kcp2k;
+using Mirror;
+using Mirror.SimpleWeb;
 using R3;
 using System;
 using TMPro;
@@ -19,6 +22,7 @@ namespace FishONU.UI
         [SerializeField] private TMP_Text errorText;
 
         [SerializeField] private BaseNetworkManager manager;
+        [SerializeField] private TelepathyTransport portTransport;
 
         private void Start()
         {
@@ -40,6 +44,8 @@ namespace FishONU.UI
                 .Subscribe(_ =>
                 {
                     SavePlayerData();
+
+
                     manager.StartHost();
                 })
                 .AddTo(ref d);
@@ -48,15 +54,40 @@ namespace FishONU.UI
                 .Subscribe(_ =>
                 {
                     SavePlayerData();
-                    manager.networkAddress = string.IsNullOrEmpty(addressInputField.text) ? "localhost" : addressInputField.text;
-                    manager.StartClient();
+
+                    string host = string.IsNullOrWhiteSpace(addressInputField.text) ? "localhost" : addressInputField.text;
+                    var portString = portInputField.text == "" ? "7777" : portInputField.text;
+
+                    bool isPortValid = ushort.TryParse(portString, out ushort port);
+                    if (!isPortValid)
+                    {
+                        errorText.text = "端口号无效。";
+                        return;
+                    }
+
+                    string scheme = "kcp"; // 默认值
+                    if (Transport.active is KcpTransport) scheme = "kcp";
+                    else if (Transport.active is TelepathyTransport) scheme = "tcp4";
+                    else if (Transport.active is SimpleWebTransport) scheme = "ws";
+
+                    UriBuilder builder = new UriBuilder
+                    {
+                        Scheme = scheme,
+                        Host = host,
+                        Port = port
+                    };
+
+                    Debug.Log("尝试链接到 " + builder.Uri);
+
+                    manager.StartClient(builder.Uri);
                 })
                 .AddTo(ref d);
 
             manager.OnClientDisconnectedAsObservable()
                 .SelectMany(_ => // 多次断开时重新返回 Observable 进行计时
                 {
-                    errorText.text = "无法链接到服务器...";
+                    errorText.text = "无法链接到服务器。";
+                    Debug.Log("无法链接到服务器。");
                     return Observable.Timer(TimeSpan.FromSeconds(3)); // 返回一个3秒的计时器
                 })
                 .Subscribe(_ => errorText.text = "")

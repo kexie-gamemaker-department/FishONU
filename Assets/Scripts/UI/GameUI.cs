@@ -33,6 +33,7 @@ namespace FishONU.UI
                 .ToReadOnlyReactiveProperty(GameStateEnum.None);
 
             IsMyTurn = Observable.EveryValueChanged(gm, x => x.currentPlayerIndex)
+                .CombineLatest(StateEnum, (_, _) => gm.GetCurrentPlayer()?.guid == pl.guid)
                 .Select(index => gm.GetCurrentPlayer()?.guid == pl.guid)
                 .ToReadOnlyReactiveProperty(false);
 
@@ -63,13 +64,11 @@ namespace FishONU.UI
                 .Where(_ => NetworkServer.active)
                 .ToReadOnlyReactiveProperty(0);
 
-            SeatNames = Observable.Interval(TimeSpan.FromSeconds(0.5)) // TODO: 暴力解，后面改
+            SeatNames = Observable.Interval(TimeSpan.FromSeconds(2)) // TODO: 暴力解，后面改
                     .AsUnitObservable()
                     .Merge(Observable.Timer(TimeSpan.FromSeconds(1)).AsUnitObservable())
                     .Select(_ =>
                     {
-                        if (gm.syncStateEnum is not (GameStateEnum.None or GameStateEnum.GameOver)) return new string[4] { "", "", "", "" };
-
                         string[] names = new string[4] { "", "", "", "" };
                         var allPlayers = GameObject.FindGameObjectsWithTag("Player")
                             .Select(go => go.GetComponent<PlayerController>())
@@ -88,6 +87,20 @@ namespace FishONU.UI
                         return names;
                     })
                     .ToReadOnlyReactiveProperty(new string[4] { "", "", "", "" });
+
+            // 监听 topCardData 的变化
+            //CurrentGameColor = Observable.EveryValueChanged(gm, x => x.topCardData)
+            CurrentGameColor = Observable.Interval(TimeSpan.FromSeconds(0.7))
+                .Select(_ =>
+                {
+                    var card = gm.topCardData;
+                    if (card == null) return FishONU.CardSystem.Color.Black;
+                    // 只有当是黑牌且 secondColor 被指定了才换色
+                    return (card.color == FishONU.CardSystem.Color.Black && card.secondColor != FishONU.CardSystem.Color.Black)
+                        ? card.secondColor
+                        : card.color;
+                })
+                .ToReadOnlyReactiveProperty(FishONU.CardSystem.Color.Black);
         }
     }
 
@@ -216,6 +229,7 @@ namespace FishONU.UI
             _viewModel.IsMyTurn
                 .Subscribe(interactive =>
                 {
+                    Debug.Log($"My Turn Status: {interactive}");
                     submitCardButton.interactable = interactive;
                     drawCardButton.interactable = interactive;
                 })
@@ -223,11 +237,22 @@ namespace FishONU.UI
 
             _viewModel.CurrentPlayerName
                 .CombineLatest(_viewModel.StateEnum, (name, state) => (name, state))
+                .CombineLatest(_viewModel.CurrentGameColor, (tuple, color) => (tuple.name, tuple.state, color))
+                // 确保有初始值，防止流阻塞
                 .Subscribe(x =>
                 {
-                    currentPlayerText.text = "";
-                    if (x.state is not (GameStateEnum.None or GameStateEnum.GameOver))
-                        currentPlayerText.text = $"当前回合: {x.name}";
+                    if (x.state is GameStateEnum.None or GameStateEnum.GameOver)
+                    {
+                        currentPlayerText.text = "";
+                        return;
+                    }
+
+                    // 只有在游戏进行中且有名时才赋值
+                    if (!string.IsNullOrEmpty(x.name))
+                    {
+                        string colorIndicator = x.color == FishONU.CardSystem.Color.Black ? "" : " ●";
+                        currentPlayerText.text = $"当前回合: {x.name}{colorIndicator}";
+                    }
                 })
                 .AddTo(ref d);
 
@@ -288,6 +313,14 @@ namespace FishONU.UI
                     }
                 })
                 .AddTo(ref d);
+
+            _viewModel.CurrentGameColor
+                .Subscribe(color =>
+                {
+                    currentPlayerText.color = GetUnityColor(color);
+                })
+                .AddTo(ref d);
+
             #endregion
 
             d.RegisterTo(destroyCancellationToken);
@@ -307,5 +340,21 @@ namespace FishONU.UI
         }
 
         #endregion Handler
+
+        #region Configs
+
+        private Color GetUnityColor(FishONU.CardSystem.Color cardColor)
+        {
+            return cardColor switch
+            {
+                FishONU.CardSystem.Color.Red => Color.red,
+                FishONU.CardSystem.Color.Blue => new Color(0.2f, 0.6f, 1f), // 稍微亮一点的蓝，防背景黑
+                FishONU.CardSystem.Color.Green => Color.green,
+                FishONU.CardSystem.Color.Yellow => Color.yellow,
+                _ => Color.white // 黑色或背面时默认白色
+            };
+        }
+
+        #endregion
     }
 }

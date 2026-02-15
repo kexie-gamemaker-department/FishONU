@@ -131,6 +131,7 @@ namespace FishONU.GamePlay.GameState
         {
             if (syncStateEnum == GameStateEnum.GameOver)
             {
+                Debug.Log("Try to Reset Game");
                 ResetGame();
                 return;
             }
@@ -149,7 +150,7 @@ namespace FishONU.GamePlay.GameState
                 return;
             }
 
-            Debug.Log("StartGame");
+            Debug.Log("Start a new Game");
 
             // TODO: 先用着，后面再重写
             var currentPlayers = GameObject.FindGameObjectsWithTag("Player")
@@ -406,6 +407,11 @@ namespace FishONU.GamePlay.GameState
         public void SetWildColor(Color color)
         {
             topCardData.secondColor = color;
+
+            // TODO: 暂时先重新完整赋值，这样才能触发 Mirror 同步，更新客户端的数据
+            var card = topCardData;
+            topCardData = null;
+            topCardData = card;
 
             TurnIndexNext();
             ChangeState(GameStateEnum.PlayerTurn);
