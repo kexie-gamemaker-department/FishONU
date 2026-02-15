@@ -1,13 +1,96 @@
 ﻿using FishONU.GamePlay.GameState;
+using FishONU.Network;
 using FishONU.Player;
+using Mirror;
+using R3;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace FishONU.UI
 {
+    public class GameViewModel
+    {
+        public ReadOnlyReactiveProperty<GameStateEnum> StateEnum { get; }
+        public ReadOnlyReactiveProperty<string> CurrentPlayerName { get; }
+        public ReadOnlyReactiveProperty<bool> IsMyTurn { get; }
+        public ReadOnlyReactiveProperty<bool> IsGaming { get; }
+        public ReadOnlyReactiveProperty<bool> ShowColorPalette { get; }
+        public ReadOnlyReactiveProperty<List<string>> GameRankName { get; }
+        public ReadOnlyReactiveProperty<int> TablePlayerCount { get; }
+
+        public ReadOnlyReactiveProperty<string[]> SeatNames { get; }
+
+        public ReadOnlyReactiveProperty<FishONU.CardSystem.Color> CurrentGameColor { get; }
+
+        public GameViewModel(GameStateManager gm, PlayerController pl, TableManager tm)
+        {
+            StateEnum = Observable.EveryValueChanged(gm, x => x.syncStateEnum)
+                .ToReadOnlyReactiveProperty(GameStateEnum.None);
+
+            IsMyTurn = Observable.EveryValueChanged(gm, x => x.currentPlayerIndex)
+                .Select(index => gm.GetCurrentPlayer()?.guid == pl.guid)
+                .ToReadOnlyReactiveProperty(false);
+
+            CurrentPlayerName = Observable.EveryValueChanged(gm, x => x.currentPlayerIndex)
+                .Select(index => gm.GetCurrentPlayer()?.displayName ?? "")
+                .ToReadOnlyReactiveProperty("");
+
+            ShowColorPalette = Observable.CombineLatest(
+                StateEnum,
+                IsMyTurn,
+                (state, isMyTurn) => state == GameStateEnum.WaitingForColor && isMyTurn
+                )
+                .ToReadOnlyReactiveProperty(false);
+
+            GameRankName = Observable.EveryValueChanged(gm, x => x.syncStateEnum)
+                .Where(state => state == GameStateEnum.GameOver)
+                .Select(_ => gm.finishedRankList.Select(
+                    guid =>
+                    {
+                        var player = PlayerController.FindPlayerByGuid(guid);
+                        if (player != null) return player.displayName;
+                        return "";
+                    })
+                        .ToList())
+                .ToReadOnlyReactiveProperty(new List<string>());
+
+            TablePlayerCount = tm.OnSeatChangeAsObservable()
+                .Where(_ => NetworkServer.active)
+                .ToReadOnlyReactiveProperty(0);
+
+            SeatNames = Observable.Interval(TimeSpan.FromSeconds(0.5)) // TODO: 暴力解，后面改
+                    .AsUnitObservable()
+                    .Merge(Observable.Timer(TimeSpan.FromSeconds(1)).AsUnitObservable())
+                    .Select(_ =>
+                    {
+                        if (gm.syncStateEnum is not (GameStateEnum.None or GameStateEnum.GameOver)) return new string[4] { "", "", "", "" };
+
+                        string[] names = new string[4] { "", "", "", "" };
+                        var allPlayers = GameObject.FindGameObjectsWithTag("Player")
+                            .Select(go => go.GetComponent<PlayerController>())
+                            .Where(p => p != null);
+
+                        foreach (var p in allPlayers)
+                        {
+                            // 计算该玩家相对于本地玩家的视觉位置
+                            int localIndex = SeatHelper.CalcLocalSeatIndex(pl.seatIndex, p.seatIndex);
+
+                            if (localIndex >= 0 && localIndex < 4)
+                            {
+                                names[localIndex] = p.displayName;
+                            }
+                        }
+                        return names;
+                    })
+                    .ToReadOnlyReactiveProperty(new string[4] { "", "", "", "" });
+        }
+    }
+
     public class GameUI : MonoBehaviour
     {
         [Header("玩家操作")]
@@ -15,19 +98,29 @@ namespace FishONU.UI
 
         [SerializeField] private Button drawCardButton;
 
-        // WARNING: 变色按钮用的是 Unity Event，所以得去 Button 的 Inspector 里面找到 Bind
         [SerializeField] private GameObject secondColorPalette;
+        [SerializeField] private Button secondColorChooseRedButton;
+        [SerializeField] private Button secondColorChooseBlueButton;
+        [SerializeField] private Button secondColorChooseGreenButton;
+        [SerializeField] private Button secondColorChooseYellowButton;
+
+        [SerializeField] private Button startGameButton;
 
         [Header("信息显示")]
-        [SerializeField] private TextMeshProUGUI currentTurnText;
+        [SerializeField] private TextMeshProUGUI currentPlayerText;
         [SerializeField] private TextMeshProUGUI gameRank;
 
+        [SerializeField] private TextMeshProUGUI[] seatNameTexts;
+
         [Header("数据")]
-        [SerializeField] public GameStateManager gm;
+        [SerializeField] private GameStateManager gm;
+        [SerializeField] private TableManager tm;
 
         public static GameUI Instance;
 
         private PlayerController player;
+
+        private GameViewModel _viewModel;
 
         private void Awake()
         {
@@ -38,33 +131,19 @@ namespace FishONU.UI
         private void Start()
         {
             if (submitCardButton == null) Debug.LogError("SubmitCardButton is null");
-            else submitCardButton.onClick.AddListener(OnSubmitCardButtonClick);
 
             if (drawCardButton == null) Debug.LogError("DrawCardButton is null");
-            else drawCardButton.onClick.AddListener(OnDrawCardButtonClick);
 
-            if (secondColorPalette == null) Debug.LogError("SecondColorPalette is null");
-
-            if (currentTurnText == null) Debug.LogError("CurrentTurnText is null");
-            else currentTurnText.text = "";
+            if (currentPlayerText == null) Debug.LogError("CurrentTurnText is null");
+            else currentPlayerText.text = "";
 
             if (gm == null) Debug.LogError("GameStateManager is null");
-            else
-            {
-                gm.OnCurrentPlayerIndexChangeAction += OnCurrentPlayerChange;
-                gm.OnStateEnumChangeAction += OnGameStateEnumChange;
-            }
+            if (tm == null) Debug.LogError("TableManager is null");
+
+            startGameButton.gameObject.SetActive(NetworkServer.active);
+            startGameButton.interactable = false;
         }
 
-        private void OnDestroy()
-        {
-            if (player != null) UnbindPlayer();
-            if (gm != null)
-            {
-                gm.OnCurrentPlayerIndexChangeAction -= OnCurrentPlayerChange;
-                gm.OnStateEnumChangeAction -= OnGameStateEnumChange;
-            }
-        }
 
         public void BindPlayer(PlayerController playerController)
         {
@@ -74,79 +153,149 @@ namespace FishONU.UI
                 return;
             }
 
+            if (player != null)
+            {
+                Debug.LogError("PlayerController is already binded");
+                return;
+            }
+
             player = playerController;
+            _viewModel = new GameViewModel(gm, player, tm);
 
-            // bind event;
-            player.OnTurnViewSwitch += OnTurnSwitch;
+            var d = Disposable.CreateBuilder();
 
-            // initial refresh view.
-            isTurn = player.isOwnersTurn;
-            RefreshView();
-        }
+            // action
 
-        private void UnbindPlayer()
-        {
-            if (player == null)
-            {
-                Debug.LogWarning("PlayerController is null");
-                return;
-            }
+            #region
 
-            player.OnTurnViewSwitch -= OnTurnSwitch;
-        }
-
-        #region View
-
-        private bool isTurn;
-        private bool isShowSecondColorPalette;
-        private readonly List<string> localRank = new();
-        private string currentPlayerDisplayName;
-
-        public void SetupGamingUI(bool activate)
-        {
-            submitCardButton.enabled = activate;
-            drawCardButton.enabled = activate;
-            currentTurnText.enabled = activate;
-            isShowSecondColorPalette = activate;
-        }
-
-        public void SelectSecondColor(string colorString)
-        {
-            if (player == null)
-            {
-                Debug.LogError("PlayerController is null");
-                return;
-            }
-
-            if (Enum.TryParse(colorString, out CardSystem.Color color))
-            {
-                player.TrySetWildColor(color);
-            }
-            else
-            {
-                Debug.LogError($"Color {colorString} is not valid");
-                return;
-            }
-        }
-
-        private void RefreshView()
-        {
-            submitCardButton.interactable = isTurn;
-            drawCardButton.interactable = isTurn;
-
-            currentTurnText.text = currentPlayerDisplayName != null ? $"当前回合: {currentPlayerDisplayName}" : "";
-
-            secondColorPalette.SetActive(isShowSecondColorPalette);
-
-            if (localRank.Count > 0)
-                foreach (var guid in localRank)
+            submitCardButton.OnClickAsObservable()
+                .ThrottleFirst(TimeSpan.FromMilliseconds(1000)) // 防抖动，限制一秒只能触发一次
+                .Subscribe(_ =>
                 {
-                    gameRank.text += $"{PlayerController.FindPlayerByGuid(guid).displayName}\n";
+                    if (player == null) Debug.LogWarning("PlayerController is null");
+                    else player.TryPlayCard();
+                })
+                .AddTo(ref d);
+
+            drawCardButton.OnClickAsObservable()
+                .ThrottleFirst(TimeSpan.FromMilliseconds(1000))
+                .Subscribe(_ =>
+                {
+                    if (player == null) Debug.LogWarning("PlayerController is null");
+                    else player.TryDrawCard();
+                })
+                .AddTo(ref d);
+
+            var colorButtons = new[]
+            {
+                (secondColorChooseRedButton, CardSystem.Color.Red),
+                (secondColorChooseBlueButton, CardSystem.Color.Blue),
+                (secondColorChooseGreenButton, CardSystem.Color.Green),
+                (secondColorChooseYellowButton, CardSystem.Color.Yellow)
+            };
+
+            foreach (var (btn, color) in colorButtons)
+            {
+                btn.OnClickAsObservable()
+                    .ThrottleFirst(TimeSpan.FromMilliseconds(1000))
+                    .Subscribe(_ => SelectSecondColor(color))
+                    .AddTo(ref d);
+            }
+
+            startGameButton.OnClickAsObservable()
+                .Where(_ => NetworkServer.active)
+                .Subscribe(_ => gm.StartGame())
+                .AddTo(ref d);
+
+            #endregion
+
+            // view
+
+            #region view bind
+
+            _viewModel.IsMyTurn
+                .Subscribe(interactive =>
+                {
+                    submitCardButton.interactable = interactive;
+                    drawCardButton.interactable = interactive;
+                })
+                .AddTo(ref d);
+
+            _viewModel.CurrentPlayerName
+                .CombineLatest(_viewModel.StateEnum, (name, state) => (name, state))
+                .Subscribe(x =>
+                {
+                    currentPlayerText.text = "";
+                    if (x.state is not (GameStateEnum.None or GameStateEnum.GameOver))
+                        currentPlayerText.text = $"当前回合: {x.name}";
+                })
+                .AddTo(ref d);
+
+            _viewModel.GameRankName
+                .CombineLatest(_viewModel.StateEnum, (names, state) => (names, state))
+                .Subscribe(x =>
+                {
+                    var (rankList, state) = x;
+
+                    gameRank.text = "";
+
+                    if (state == GameStateEnum.GameOver &&
+                        rankList.Count > 0)
+                    {
+                        gameRank.text += "结算：\n";
+                        for (int i = 0; i < rankList.Count; i++)
+                        {
+                            gameRank.text += $"{i + 1}. {rankList[i]}\n";
+                        }
+                    }
+                })
+                .AddTo(ref d);
+
+            _viewModel.ShowColorPalette
+                .Subscribe(show =>
+                {
+                    secondColorPalette.SetActive(show);
+                })
+                .AddTo(ref d);
+
+            _viewModel.StateEnum
+                .Where(_ => NetworkServer.active)
+                .Subscribe(state => startGameButton.gameObject.SetActive(state is (GameStateEnum.None or GameStateEnum.GameOver)))
+                .AddTo(ref d);
+
+            _viewModel.StateEnum
+                .Where(_ => NetworkServer.active)
+                .CombineLatest(_viewModel.TablePlayerCount, (state, count) => (state, count))
+                .Subscribe(x =>
+                {
+                    // TODO: 也许可以不用那么频繁触发这个，一个 state 变化这里就重新触发了
+                    startGameButton.interactable = x.state is (GameStateEnum.None or GameStateEnum.GameOver) &&
+                        x.count >= 2;
                 }
-            else gameRank.text = "";
+                )
+                .AddTo(ref d);
+
+            // 绑定座位名字显示
+            _viewModel.SeatNames
+                .Subscribe(names =>
+                {
+                    for (int i = 0; i < seatNameTexts.Length; i++)
+                    {
+                        if (i < names.Length)
+                        {
+                            seatNameTexts[i].text = names[i];
+                        }
+                    }
+                })
+                .AddTo(ref d);
+            #endregion
+
+            d.RegisterTo(destroyCancellationToken);
         }
 
-        private void OnSubmitCardButtonClick()
+        #region Handler
+
+        public void SelectSecondColor(CardSystem.Color color)
         {
             if (player == null)
             {
@@ -154,67 +303,9 @@ namespace FishONU.UI
                 return;
             }
 
-            player.TryPlayCard();
+            player.TrySetWildColor(color);
         }
 
-        private void OnDrawCardButtonClick()
-        {
-            if (player == null)
-            {
-                Debug.Log("PlayerController is null");
-                return;
-            }
-
-            player.TryDrawCard();
-        }
-
-        #endregion View
-
-        #region Outer Delegate Handler
-
-        private void OnTurnSwitch(bool oldValue, bool newValue)
-        {
-            isTurn = newValue;
-            RefreshView();
-        }
-
-        private void OnCurrentPlayerChange(int oldValue, int newValue)
-        {
-            var p = gm.GetCurrentPlayer();
-
-            if (p == null)
-            {
-                Debug.LogError("OnGameStateEnumChange: PlayerController is null");
-                return;
-            }
-
-            currentPlayerDisplayName = p.displayName;
-            RefreshView();
-        }
-
-        private void OnGameStateEnumChange(GameStateEnum oldValue, GameStateEnum newValue)
-        {
-            if (newValue == GameStateEnum.WaitingForColor &&
-                player.guid == gm.GetCurrentPlayer().guid)
-            {
-                isShowSecondColorPalette = true;
-            }
-            else
-            {
-                isShowSecondColorPalette = false;
-            }
-
-            if (newValue == GameStateEnum.GameOver)
-            {
-                // 关闭所有游戏中 UI，显示排行榜
-                SetupGamingUI(false);
-                localRank.Clear();
-                localRank.AddRange(gm.finishedRankList);
-            }
-
-            RefreshView();
-        }
-
-        #endregion Outer Delegate Handler
+        #endregion Handler
     }
 }

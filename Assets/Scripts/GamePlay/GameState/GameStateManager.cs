@@ -13,7 +13,7 @@ namespace FishONU.GamePlay.GameState
     public class GameStateManager : NetworkBehaviour
     {
         [SyncVar(hook = nameof(OnStateChange))]
-        private GameStateEnum syncStateEnum = GameStateEnum.None;
+        public GameStateEnum syncStateEnum = GameStateEnum.None;
 
         private readonly SyncList<string> syncPlayersList = new();
 
@@ -129,8 +129,14 @@ namespace FishONU.GamePlay.GameState
         [Server]
         public void StartGame()
         {
+            if (syncStateEnum == GameStateEnum.GameOver)
+            {
+                ResetGame();
+                return;
+            }
+
             // 防止重复启动
-            if (LocalState != null && LocalState is not NoneState)
+            if (LocalState != null && LocalState is not (NoneState or GameOverState))
             {
                 Debug.LogError($"Game already started at state {LocalState}");
                 return;
@@ -152,6 +158,33 @@ namespace FishONU.GamePlay.GameState
                 .ToArray();
             players.AddRange(currentPlayers);
             syncPlayersList.AddRange(currentPlayers.Select(p => p.guid));
+
+            ChangeState(GameStateEnum.Prepare);
+        }
+
+        [Server]
+        public void ResetGame()
+        {
+            Debug.Log("Resetting Game for a new round...");
+
+            currentPlayerIndex = 0;
+            turnDirection = 1;
+            drawPenaltyStack = 0;
+            topCardData = new CardData(); // 或者设为空
+            effectingCardData = null;
+
+            finishedRankList.Clear();
+
+            drawPileInventory.Cards.Clear();
+            discardPileInventory.Cards.Clear();
+
+            foreach (var p in players)
+            {
+                if (p != null && p.ownerInventory != null)
+                {
+                    p.ownerInventory.Cards.Clear();
+                }
+            }
 
             ChangeState(GameStateEnum.Prepare);
         }
