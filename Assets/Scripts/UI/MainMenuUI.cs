@@ -4,6 +4,7 @@ using kcp2k;
 using Mirror;
 using Mirror.SimpleWeb;
 using R3;
+using R3.Triggers;
 using System;
 using TMPro;
 using UnityEngine;
@@ -13,13 +14,15 @@ namespace FishONU.UI
 {
     public class MainMenuUI : MonoBehaviour
     {
-        [Header("引用")]
-        [SerializeField] private TMP_InputField playerNameInputField;
+        [Header("引用")][SerializeField] private TMP_InputField playerNameInputField;
         [SerializeField] private TMP_InputField addressInputField;
         [SerializeField] private TMP_InputField portInputField;
         [SerializeField] private Button joinButton;
         [SerializeField] private Button hostButton;
         [SerializeField] private TMP_Text errorText;
+
+        [SerializeField] private Button fullScreenToggleButton;
+        [SerializeField] private TMP_Dropdown WindowSizeDropdown;
 
         [SerializeField] private BaseNetworkManager manager;
         [SerializeField] private TelepathyTransport portTransport;
@@ -40,6 +43,42 @@ namespace FishONU.UI
                 .SubscribeToInteractable(joinButton)
                 .AddTo(ref d);
 
+            fullScreenToggleButton.OnClickAsObservable()
+                .Subscribe(_ =>
+                {
+                    if (Screen.fullScreen)
+                    {
+                        Screen.fullScreen = false;
+                    }
+                    else
+                    {
+                        Screen.SetResolution(Screen.currentResolution.width, Screen.currentResolution.height, FullScreenMode.FullScreenWindow);
+                    }
+                })
+                .AddTo(ref d);
+
+            WindowSizeDropdown.OnValueChangedAsObservable()
+                .Subscribe(index =>
+                {
+                    if (Screen.fullScreen) return;
+                    switch (index)
+                    {
+                        case 0:
+                            Screen.SetResolution(2160, 1440, false);
+                            break;
+                        case 1:
+                            Screen.SetResolution(1920, 1080, false);
+                            break;
+                        case 2:
+                            Screen.SetResolution(1280, 720, false);
+                            break;
+                        case 3:
+                            Screen.SetResolution(640, 360, false);
+                            break;
+                    }
+                })
+                .AddTo(ref d);
+
             hostButton.OnClickAsObservable()
                 .Subscribe(_ =>
                 {
@@ -55,7 +94,9 @@ namespace FishONU.UI
                 {
                     SavePlayerData();
 
-                    string host = string.IsNullOrWhiteSpace(addressInputField.text) ? "localhost" : addressInputField.text;
+                    string host = string.IsNullOrWhiteSpace(addressInputField.text)
+                        ? "localhost"
+                        : addressInputField.text;
                     var portString = portInputField.text == "" ? "7777" : portInputField.text;
 
                     bool isPortValid = ushort.TryParse(portString, out ushort port);
