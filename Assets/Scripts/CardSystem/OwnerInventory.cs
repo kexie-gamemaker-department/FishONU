@@ -28,13 +28,14 @@ namespace FishONU.CardSystem
             {
                 if (value == null)
                 {
-                    Debug.LogError("HighlightCardObj is not CardObj");
+                    // TODO: 处理网络延迟? 需要吗
+                    Debug.LogWarning("HighlightCardObj is not CardObj");
                     return;
                 }
 
                 if (!localCardObjs.ContainsKey(value.guid))
                 {
-                    Debug.LogError("HighlightCard is not in localCardObjs");
+                    Debug.LogWarning("HighlightCard is not in localCardObjs");
                     return;
                 }
 
