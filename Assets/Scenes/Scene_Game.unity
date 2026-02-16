@@ -1098,7 +1098,7 @@ Camera:
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
-    m_Bits: 4294967295
+    m_Bits: 55
   m_RenderingPath: -1
   m_TargetTexture: {fileID: 0}
   m_TargetDisplay: 0
@@ -2408,7 +2408,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6360755407664007114, guid: 3b701637f276cdd47b88e5fc15538145, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: 100
       objectReference: {fileID: 0}
     - target: {fileID: 6360755407664007114, guid: 3b701637f276cdd47b88e5fc15538145, type: 3}
       propertyPath: m_LocalRotation.w
@@ -2416,15 +2416,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6360755407664007114, guid: 3b701637f276cdd47b88e5fc15538145, type: 3}
       propertyPath: m_LocalRotation.x
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 6360755407664007114, guid: 3b701637f276cdd47b88e5fc15538145, type: 3}
       propertyPath: m_LocalRotation.y
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 6360755407664007114, guid: 3b701637f276cdd47b88e5fc15538145, type: 3}
       propertyPath: m_LocalRotation.z
-      value: 0
+      value: -0
       objectReference: {fileID: 0}
     - target: {fileID: 6360755407664007114, guid: 3b701637f276cdd47b88e5fc15538145, type: 3}
       propertyPath: m_AnchoredPosition.x
