@@ -61,18 +61,27 @@ namespace FishONU.Player
         {
             if (isLocalPlayer)
             {
-                if (Mouse.current.leftButton.wasPressedThisFrame)
+                bool isPressed = false;
+                Vector2 inputPosition = Vector2.zero;
+
+                if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
                 {
-                    if (Camera.main != null)
+                    isPressed = true;
+                    inputPosition = Mouse.current.position.ReadValue();
+                }
+                else if (Touchscreen.current != null && Touchscreen.current.press.wasPressedThisFrame)
+                {
+                    isPressed = true;
+                    inputPosition = Touchscreen.current.position.ReadValue();
+                }
+
+                if (isPressed && Camera.main != null)
+                {
+                    var hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(inputPosition), Vector2.zero);
+
+                    if (hit.collider != null && hit.collider.gameObject.CompareTag("Card"))
                     {
-                        Vector2 mousePosition = Mouse.current.position.ReadValue();
-
-                        var hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(mousePosition), Vector2.zero);
-
-                        if (hit.collider != null && hit.collider.gameObject.CompareTag("Card"))
-                        {
-                            SelectCard(hit.collider.gameObject);
-                        }
+                        SelectCard(hit.collider.gameObject);
                     }
                 }
             }
