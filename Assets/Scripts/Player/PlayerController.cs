@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using Object = UnityEngine.Object;
 
@@ -59,20 +60,39 @@ namespace FishONU.Player
 
         private void Update()
         {
+            HandleInput();
+        }
+
+        private void HandleInput()
+        {
             if (isLocalPlayer)
             {
-                if (Mouse.current.leftButton.wasPressedThisFrame)
+                bool isPressed = false;
+                Vector2 inputPosition = Vector2.zero;
+
+                if (Mouse.current != null && Mouse.current.leftButton.wasPressedThisFrame)
                 {
-                    if (Camera.main != null)
+                    isPressed = true;
+                    inputPosition = Mouse.current.position.ReadValue();
+                }
+                else if (Touchscreen.current != null && Touchscreen.current.press.wasPressedThisFrame)
+                {
+                    isPressed = true;
+                    inputPosition = Touchscreen.current.position.ReadValue();
+                }
+
+                if (isPressed && Camera.main != null)
+                {
+                    if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
                     {
-                        Vector2 mousePosition = Mouse.current.position.ReadValue();
+                        return;
+                    }
 
-                        var hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(mousePosition), Vector2.zero);
+                    var hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(inputPosition), Vector2.zero);
 
-                        if (hit.collider != null && hit.collider.gameObject.CompareTag("Card"))
-                        {
-                            SelectCard(hit.collider.gameObject);
-                        }
+                    if (hit.collider != null && hit.collider.gameObject.CompareTag("Card"))
+                    {
+                        SelectCard(hit.collider.gameObject);
                     }
                 }
             }
