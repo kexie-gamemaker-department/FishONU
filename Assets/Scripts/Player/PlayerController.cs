@@ -8,6 +8,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using Object = UnityEngine.Object;
 
@@ -59,6 +60,11 @@ namespace FishONU.Player
 
         private void Update()
         {
+            HandleInput();
+        }
+
+        private void HandleInput()
+        {
             if (isLocalPlayer)
             {
                 bool isPressed = false;
@@ -77,6 +83,11 @@ namespace FishONU.Player
 
                 if (isPressed && Camera.main != null)
                 {
+                    if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
+                    {
+                        return;
+                    }
+
                     var hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(inputPosition), Vector2.zero);
 
                     if (hit.collider != null && hit.collider.gameObject.CompareTag("Card"))
