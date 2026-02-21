@@ -1,6 +1,7 @@
 # FishONU
 
-[![wakatime](https://wakatime.com/badge/user/122119c8-ad52-4b18-8087-1458836967e0/project/4c93c248-d1f3-4888-a4bf-a26b92a5b736.svg)](https://wakatime.com/badge/user/122119c8-ad52-4b18-8087-1458836967e0/project/4c93c248-d1f3-4888-a4bf-a26b92a5b736)
+![GitHub Release](https://img.shields.io/github/v/release/FishCat233/FishONU) ![GitHub Downloads (all assets, all releases)](https://img.shields.io/github/downloads/FishCat233/FishONU/total)
+ [![wakatime](https://wakatime.com/badge/user/122119c8-ad52-4b18-8087-1458836967e0/project/4c93c248-d1f3-4888-a4bf-a26b92a5b736.svg)](https://wakatime.com/badge/user/122119c8-ad52-4b18-8087-1458836967e0/project/4c93c248-d1f3-4888-a4bf-a26b92a5b736)
 
 一个基于 Unity 的多人在线 UNO 卡牌游戏
 
